@@ -26,6 +26,25 @@ def YSize2(text):
 	print('[INFO] Y = ' + str(ret))
 	return ret
 
+def searchIMax(tab):
+	ret = 0
+	cur = 0
+	for element in tab:
+		if(element > ret):
+			ret = cur
+			cur = cur + 1
+	return ret
+
+def NoirEtBlanc(imgAr):
+	for eachRow in imgAr:
+		for eachPix in eachRow:
+			moy = (eachPix[0] + eachPix[1] + eachPix[2])/3
+			eachPix[0] = moy
+			eachPix[1] = moy
+			eachPix[2] = moy
+	
+	return imgAr
+
 def colorIt(curseur, text, lettre):
 	try:
 		return ord(text[(curseur*3)+lettre])
@@ -88,7 +107,106 @@ def CreationImage2(imageArray, text, showImage, verbose):
 		plt.show()
 	return newAr
 
-def saveImage(nomImage, tableau):
+def Methode1(tableau, pathToBackImage, showImage, verbose):
+	print('[INFO] Methode 1')
+	img = Image.open(pathToBackImage)
+	imgAr = np.array(smisc.imresize(img.copy(), (len(tableau[0]),len(tableau))))
+	print('[INFO] BackImage en cache et redimonsionne')
+	diviseur = input('Saisir N (Intensite/N) : ')
+	indexRow = 0
+	indexPix = 0
+	
+	for eachRow in imgAr:
+		for eachPix in eachRow:
+			moy = (eachPix[0] + eachPix[1] + eachPix[2])/3
+			eachPix[0] = moy
+			eachPix[1] = moy
+			eachPix[2] = moy
+			
+			if(verbose):
+				print('Moy : ' + str(moy))
+	
+	if(showImage):
+		plt.imshow(imgAr)
+		plt.show()
+	
+	for eachRow in tableau:
+		indexPix = 0
+		for eachPix in eachRow:
+			modif = imgAr[indexRow][indexPix][0]/diviseur
+			iMax = searchIMax(eachPix)
+			eachPix[iMax] = int(eachPix[iMax] + modif)
+			
+			if(verbose):
+				print('[INFO] Row : ' + str(indexRow) + 'Pix : ' + str(indexPix))
+				print('\t- red : ' + str(eachPix[0]))
+				print('\t- green : ' + str(eachPix[1]))
+				print('\t- blue : ' + str(eachPix[2]))
+			
+			indexPix = indexPix + 1
+		indexRow = indexRow + 1
+	
+	if(showImage):
+		plt.imshow(tableau)
+		plt.show()
+	
+	return tableau
+
+def Methode2(tableau, pathToBackImage, showImage, verbose):
+	print('[INFO] Methode 2')
+	img = Image.open(pathToBackImage)
+	imgAr = np.array(smisc.imresize(img.copy(), (len(tableau[0]),len(tableau))))
+	print('[INFO] BackImage en cache et redimonsionne')
+	red = float(input('Pourcentage de rouge : '))/100
+	green = float(input('Pourcentage de vert : '))/100
+	blue = float(input('Pourcentage de bleu : '))/100
+	addition = input('Addition (1) | Soustraction (0) : ')
+	indexRow = 0
+	indexPix = 0
+	
+	imgAr = NoirEtBlanc(imgAr)
+	
+	if(showImage):
+		plt.imshow(imgAr)
+		plt.show()
+	
+	for eachRow in tableau:
+		indexPix = 0
+		for eachPix in eachRow:
+			modif = imgAr[indexRow][indexPix][0]
+			if(addition):
+				eachPix[0] = int(eachPix[0] + float(modif)*red)
+				eachPix[1] = int(eachPix[1] + float(modif)*green)
+				eachPix[2] = int(eachPix[2] + float(modif)*blue)
+			else:
+				eachPix[0] = int(eachPix[0] - float(modif)*red)
+				eachPix[1] = int(eachPix[1] - float(modif)*green)
+				eachPix[2] = int(eachPix[2] - float(modif)*blue)
+			
+			if(verbose):
+				print('[INFO] Row : ' + str(indexRow) + 'Pix : ' + str(indexPix))
+				print('\t- red : ' + str(eachPix[0]))
+				print('\t- green : ' + str(eachPix[1]))
+				print('\t- blue : ' + str(eachPix[2]))
+			
+			indexPix = indexPix + 1
+		indexRow = indexRow + 1
+	
+	if(showImage):
+		plt.imshow(tableau)
+		plt.show()
+	
+	return tableau
+
+def TraitementImage(tableau, pathToBackImage, version, showImage, verbose):
+	if(version == 1):
+		Methode1(tableau, pathToBackImage, showImage, verbose)
+	if(version == 2):
+		Methode2(tableau, pathToBackImage, showImage, verbose)
+	
+	return tableau
+
+def SaveImage(nomImage, tableau):
 	newimage = Image.new('RGB', (len(tableau[0]), len(tableau)))
 	newimage.putdata([tuple(p) for row in tableau for p in row])
 	newimage.save(nomImage)
@@ -98,9 +216,9 @@ def main():
 	print('[INFO] Programme Lance')
 	text = open('res/textAPeindre.txt').read()
 	print('INFO] Text en cache')
-	pathToFile = 'res/blanc500x500.png'
-	img = Image.open(pathToFile)
+	img = Image.open('res/blanc500x500.png')
 	print('[INFO] Image Blanche en cache')
+	pathToBackImage = 'res/backimage.png'
 	print('[INFO] Debut de conversion')
 	
 	##### Image
@@ -110,7 +228,10 @@ def main():
 	# Creation
 	tableau = CreerImage(img, text, 2, False, False)
 	
+	# Traitement
+	tableau = TraitementImage(tableau, pathToBackImage, input("Mode de traitement : "), True, False)
+	
 	# Save
-	saveImage('img/' + nomFichier + '.png', tableau)
+	SaveImage('img/' + nomFichier + '.png', tableau)
 
 main()
