@@ -32,26 +32,6 @@ def VMax(tab):
 				tmp = eachPix[2]
 	return tmp
 
-def XSize(text):
-	ret = (int(sqrt(len(text)/3))+1)
-	print('[INFO] X = ' + str(ret))
-	return ret
-
-def YSize(text):
-	ret = (int(sqrt(len(text)/3))+1)
-	print('[INFO] Y = ' + str(ret))
-	return ret
-
-def XSize2(text):
-	ret = int(len(text)/3)+1
-	print('[INFO] X = ' + str(ret))
-	return ret
-
-def YSize2(text):
-	ret = int(len(text)/3)+1
-	print('[INFO] Y = ' + str(ret))
-	return ret
-
 def searchIMax(tab):
 	ret = 0
 	cur = 0
