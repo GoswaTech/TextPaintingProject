@@ -6,6 +6,30 @@ import matplotlib.pyplot as plt
 import scipy.misc as smisc
 from math import sqrt
 
+def VMin(tab):
+	tmp = 255
+	for eachRaw in tab:
+		for eachPix in eachRaw:
+			if(eachPix[0] < tmp):
+				tmp = eachPix[0]
+			if(eachPix[1] < tmp):
+				tmp = eachPix[1]
+			if(eachPix[2] < tmp):
+				tmp = eachPix[2]
+	return tmp
+
+def VMax(tab):
+	tmp = 0
+	for eachRaw in tab:
+		for eachPix in eachRaw:
+			if(eachPix[0] > tmp):
+				tmp = eachPix[0]
+			if(eachPix[1] > tmp):
+				tmp = eachPix[1]
+			if(eachPix[2] > tmp):
+				tmp = eachPix[2]
+	return tmp
+
 def XSize(text):
 	ret = (int(sqrt(len(text)/3))+1)
 	print('[INFO] X = ' + str(ret))
@@ -198,7 +222,37 @@ def Methode2(tableau, pathToBackImage, showImage, verbose):
 	
 	return tableau
 
+def FocusColors(tableau, showImage, verbose):
+	min = float(VMin(tableau))
+	max = float(VMax(tableau))
+	print('[INFO] Min : ' + str(min) + ' Max : ' + str(max))
+	if(verbose):
+		for eachRow in tableau:
+			for eachPix in eachRow:
+				print('\t- red : ' + str(eachPix[0]))
+				eachPix[0] = int((float(eachPix[0])-min)/(max-min)*255)
+				print('\t-> - red : ' + str(eachPix[0]))
+				print('\t- green : ' + str(eachPix[1]))
+				eachPix[1] = int((float(eachPix[1])-min)/(max-min)*255)
+				print('\t-> - green : ' + str(eachPix[1]))
+				print('\t- blue : ' + str(eachPix[2]))
+				eachPix[2] = int((float(eachPix[2])-min)/(max-min)*255)
+				print('\t-> - blue : ' + str(eachPix[2]))
+	else:
+		for eachRow in tableau:
+			for eachPix in eachRow:
+				eachPix[0] = int((float(eachPix[0])-min)/(max-min)*255)
+				eachPix[1] = int((float(eachPix[1])-min)/(max-min)*255)
+				eachPix[2] = int((float(eachPix[2])-min)/(max-min)*255)
+	if(showImage):
+		plt.imshow(tableau)
+		plt.show()
+	
+	return tableau
+
 def TraitementImage(tableau, pathToBackImage, version, showImage, verbose):
+	if(version == 0):
+		return tableau
 	if(version == 1):
 		Methode1(tableau, pathToBackImage, showImage, verbose)
 	if(version == 2):
@@ -226,9 +280,10 @@ def main():
 	nomFichier = raw_input('Nom de l\'image : ')
 	
 	# Creation
-	tableau = CreerImage(img, text, 2, False, False)
+	tableau = CreerImage(img, text, 2, True, False)
 	
 	# Traitement
+	tableau = FocusColors(tableau,  True, False)
 	tableau = TraitementImage(tableau, pathToBackImage, input("Mode de traitement : "), True, False)
 	
 	# Save
