@@ -8,7 +8,7 @@ Le but de cette première version est de voir comment serait le rendu final de l
 ## Fonctionnement
 
 * Insérer votre texte brut dans le fichier ./res/textAPeindre.txt
-* Renommer l'image en "./res/backimage.png"
+* Renommer l'image en "backimage" dans le dossier "./res" (l'image doit être un png)
 * Lancer le script ./TextPaintingProject.py
 * Suivre les instruction
 
@@ -17,7 +17,7 @@ Le but de cette première version est de voir comment serait le rendu final de l
 ## Versions de Traitement
 
 1. Intensité moyenne de chaque pixel de l'image (moy) additionnée à l'intensité de la couleur la plus lumineuse de chaque pixel (l'intensité moyenne est divisée par K)
-2. Intersité moyenne de chaque pixel de l'image (moy) ajoutée/soustraite à l'image du texte. Les pourcentages sont les pourcentages d'intensité de l'image de fond.
+2. Intensité moyenne de chaque pixel de l'image (moy) ajoutée/soustraite à l'image du texte. Les pourcentages sont les pourcentages d'intensité de l'image de fond.
 
 ---
 

@@ -1,5 +1,7 @@
 #!/usr/bin/python
 
+import os
+import glob
 from PIL import Image
 import numpy as np
 import matplotlib.pyplot as plt
@@ -75,19 +77,20 @@ def colorIt(curseur, text, lettre):
 	except:
 		return 0
 
-def CreerImage(imageArray, text, version, showImage, verbose):
+def CreerImage(text, version, showImage, verbose):
 	if(version == 1 ):
 		print('[INFO] Methode 1 chosie')
-		return CreationImage(imageArray, text, showImage, verbose)
+		return CreationImage(text, showImage, verbose)
 	elif(version == 2):
 		print('[INFO] Methode 2 choisie')
-		return CreationImage2(imageArray, text, showImage, verbose)
+		return CreationImage2(text, showImage, verbose)
 
-def CreationImage(imageArray, text, showImage, verbose):
+def CreationImage(text, showImage, verbose):
 	print('[INFO] Image en Creation')
 	curseur = 0
-	newAr = np.array(smisc.imresize(imageArray.copy(), (XSize(text),YSize(text))))
-	print('[INFO] Image redimensionne')
+	dim = len(text)/3
+	newAr = np.array(Image.new('RGB', (int(sqrt(dim)), int(sqrt(dim)))))
+	print('[INFO] Dimensions image : ' + str(dim))
 	for eachRow in newAr:
 		for eachPix in eachRow:
 			premiereLettre = colorIt(curseur, text, 0)
@@ -107,11 +110,13 @@ def CreationImage(imageArray, text, showImage, verbose):
 		plt.show()
 	return newAr
 
-def CreationImage2(imageArray, text, showImage, verbose):
+def CreationImage2(text, showImage, verbose):
 	print('[INFO] Image2 en Creation')
 	curseur = 0
-	newAr = np.array(smisc.imresize(imageArray.copy(), (XSize2(text),YSize2(text))))
-	print('[INFO] Image redimensionne')
+	curseur = 0
+	dim = len(text)/3
+	newAr = np.array(Image.new('RGB', (dim, dim)))
+	print('[INFO] Dimensions image : ' + str(dim))
 	for eachRow in newAr:
 		premiereLettre = colorIt(curseur, text, 0)
 		deuxiemeLettre = colorIt(curseur, text, 1)
@@ -225,7 +230,7 @@ def Methode2(tableau, pathToBackImage, showImage, verbose):
 def FocusColors(tableau, showImage, verbose):
 	min = float(VMin(tableau))
 	max = float(VMax(tableau))
-	print('[INFO] Min : ' + str(min) + ' Max : ' + str(max))
+	print('[INFO] Min : ' + str(int(min)) + ' Max : ' + str(int(max)))
 	if(verbose):
 		for eachRow in tableau:
 			for eachPix in eachRow:
@@ -266,27 +271,45 @@ def SaveImage(nomImage, tableau):
 	newimage.save(nomImage)
 	print('[INFO] Image Sauvee')
 
+def LoadBackImage(absPath):
+	liste = glob.glob(absPath + "/res/backimage.*")
+	for files in liste:
+		extension = files.split('backimage.')[1]
+		if(extension == 'jpg'):
+			print('[INFO] Extension : jpg\nConversion en png')
+			#ConvertJPGToPNG(files)
+		elif(extension == 'png'):
+			print('[INFO] Extension : png')
+
 def main():
+	##### Initiation de l'environnement de travail
+	absPath = os.path.abspath('.')
+	try:
+		os.mkdir(absPath + '/img')
+		print('[INFO] Dossier img cree')
+	except:
+		print('[INFO] Dossier img existant')
+	
+	##### Mise en memoire des variables
 	print('[INFO] Programme Lance')
 	text = open('res/textAPeindre.txt').read()
-	print('INFO] Text en cache')
-	img = Image.open('res/blanc500x500.png')
-	print('[INFO] Image Blanche en cache')
-	pathToBackImage = 'res/backimage.png'
-	print('[INFO] Debut de conversion')
+	print('[INFO] Text en cache')
+	
+	##### Recherche de l'image a importer
+	LoadBackImage(absPath)
+	pathToBackImage = absPath + '/res/backimage.png'
 	
 	##### Image
-	# Nom du Fichier
-	nomFichier = raw_input('Nom de l\'image : ')
 	
 	# Creation
-	tableau = CreerImage(img, text, 2, True, False)
+	tableau = CreerImage(text, 2, True, False)
 	
 	# Traitement
 	tableau = FocusColors(tableau,  True, False)
 	tableau = TraitementImage(tableau, pathToBackImage, input("Mode de traitement : "), True, False)
 	
 	# Save
+	nomFichier = raw_input('[INFO] Exportation\nNom de l\'image : ')
 	SaveImage('img/' + nomFichier + '.png', tableau)
 
 main()
