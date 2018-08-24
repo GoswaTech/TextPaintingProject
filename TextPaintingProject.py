@@ -1,5 +1,7 @@
 #!/usr/bin/python
 
+# -*- coding: utf-8 -*-
+
 import os
 import glob
 from PIL import Image
@@ -57,6 +59,15 @@ def colorIt(curseur, text, lettre):
 	except:
 		return 0
 
+def colorLine(newAr, intensite, curseur):
+	for eachPix in newAr[curseur/3]:
+		eachPix[curseur%3] = intensite
+	return newAr
+
+def TextToVers(text):
+	vers = text.split('\n')
+	return vers
+
 def CreerImage(text, version, showImage, verbose):
 	if(version == 1 ):
 		print('[INFO] Methode 1 chosie')
@@ -64,6 +75,9 @@ def CreerImage(text, version, showImage, verbose):
 	elif(version == 2):
 		print('[INFO] Methode 2 choisie')
 		return CreationImage2(text, showImage, verbose)
+	elif(version == 3):
+		print('[INFO] Methode 3 choisie')
+		return CreationImage3(text, showImage, verbose)
 
 def CreationImage(text, showImage, verbose):
 	print('[INFO] Image en Creation')
@@ -93,8 +107,10 @@ def CreationImage(text, showImage, verbose):
 def CreationImage2(text, showImage, verbose):
 	print('[INFO] Image2 en Creation')
 	curseur = 0
-	curseur = 0
 	dim = len(text)/3
+	if(len(text)%3 != 0):
+		dim = dim + 1
+	
 	newAr = np.array(Image.new('RGB', (dim, dim)))
 	print('[INFO] Dimensions image : ' + str(dim))
 	for eachRow in newAr:
@@ -115,6 +131,54 @@ def CreationImage2(text, showImage, verbose):
 		plt.imshow(newAr)
 		plt.show()
 	return newAr
+
+def CreationImage3(text, showImage, verbose):
+	print('[INFO] Image3 en Creation')
+	curseur = 0
+	vers = TextToVers(text)
+	dim = 0
+	for i in vers:
+		dim = dim + (len(i)/3)
+		if(len(i)%3 != 0):
+			dim = dim + 1
+	
+	newAr = np.array(Image.new('RGB', (dim, dim)))
+	print('[INFO] Dimensions image : ' + str(dim))
+	
+	for eachVers in vers:
+		for indexChar in range(len(eachVers)):
+			newAr = colorLine(newAr, ord(eachVers[indexChar]), curseur)
+			
+			if(ord(eachVers[indexChar]) == 13):
+				if(len(eachVers) != 0):
+					if(len(eachVers)%3 == 1):
+						newAr = colorLine(newAr, ord(eachVers[indexChar]), curseur)
+						curseur = curseur + 1
+						newAr = colorLine(newAr, ord(eachVers[indexChar]), curseur)
+						curseur = curseur + 1
+						newAr = colorLine(newAr, ord(eachVers[indexChar]), curseur)
+					if(len(eachVers)%3 == 2):
+						newAr = colorLine(newAr, ord(eachVers[indexChar]), curseur)
+						curseur = curseur + 1
+						newAr = colorLine(newAr, ord(eachVers[indexChar]), curseur)
+			if(verbose):
+					print('Row : ' + str(curseur/3) + ' \n\tColors : ' + str(curseur%3) + ' -> ' + str(ord(eachVers[indexChar])) + ' (' + str(eachVers[indexChar]) + ')')
+			curseur = curseur + 1
+	if(showImage):
+		plt.imshow(newAr)
+		plt.show()
+	
+	return newAr
+
+def TraitementImage(tableau, pathToBackImage, version, showImage, verbose):
+	if(version == 0):
+		return tableau
+	if(version == 1):
+		Methode1(tableau, pathToBackImage, showImage, verbose)
+	if(version == 2):
+		Methode2(tableau, pathToBackImage, showImage, verbose)
+	
+	return tableau
 
 def Methode1(tableau, pathToBackImage, showImage, verbose):
 	print('[INFO] Methode 1')
@@ -235,23 +299,19 @@ def FocusColors(tableau, showImage, verbose):
 	
 	return tableau
 
-def TraitementImage(tableau, pathToBackImage, version, showImage, verbose):
-	if(version == 0):
-		return tableau
-	if(version == 1):
-		Methode1(tableau, pathToBackImage, showImage, verbose)
-	if(version == 2):
-		Methode2(tableau, pathToBackImage, showImage, verbose)
-	
-	return tableau
-
-def SaveImage(nomImage, tableau):
-	newimage = Image.new('RGB', (len(tableau[0]), len(tableau)))
-	newimage.putdata([tuple(p) for row in tableau for p in row])
-	newimage.save(nomImage)
-	print('[INFO] Image Sauvee')
+def SaveImage(tableau):
+	plt.imshow(tableau)
+	plt.show()
+	if(input("Sauver l'image ? yes(1) | no(0) ")):
+		newimage = Image.new('RGB', (len(tableau[0]), len(tableau)))
+		newimage.putdata([tuple(p) for row in tableau for p in row])
+		newimage.save('img/' + raw_input('[INFO] Exportation\nNom de l\'image : ') + '.png')
+		print('[INFO] Image Sauvee')
+	else:
+		print('[INFO] Image Non Sauvee')
 
 def LoadBackImage(absPath):
+	print('[INFO] Loading BackImage')
 	liste = glob.glob(absPath + "/res/backimage.*")
 	for files in liste:
 		extension = files.split('backimage.')[1]
@@ -260,6 +320,21 @@ def LoadBackImage(absPath):
 			#ConvertJPGToPNG(files)
 		elif(extension == 'png'):
 			print('[INFO] Extension : png')
+
+def MessageFinProgramme():
+	soon = []
+	soon.append("Traitement de l'image en couleur (et pas que noir et blanc")
+	soon.append("Texte en phonetique")
+	soon.append("Recherche du texte sur genius.com")
+	soon.append("Traitement du son")
+	#soon.append("")
+	
+	print("*\n**\n***\n****\n*****")
+	print("Fin du programme")
+	print("Coming Soon :")
+	for module in soon:
+		print("\t- " + module)
+	print("*****\n****\n***\n**\n*")
 
 def main():
 	##### Initiation de l'environnement de travail
@@ -279,17 +354,23 @@ def main():
 	LoadBackImage(absPath)
 	pathToBackImage = absPath + '/res/backimage.png'
 	
+	##### Mode
+	showImage = input("Show Image ? yes(1) | no(0) ")
+	verbose = input("Verbose ? yes(1) | no(0) ")
+	
 	##### Image
 	
 	# Creation
-	tableau = CreerImage(text, 2, True, False)
+	tableau = CreerImage(text, 3, showImage, verbose)
 	
 	# Traitement
-	tableau = FocusColors(tableau,  True, False)
-	tableau = TraitementImage(tableau, pathToBackImage, input("Mode de traitement : "), True, False)
+	tableau = FocusColors(tableau,  showImage, verbose)
+	tableau = TraitementImage(tableau, pathToBackImage, input("Mode de traitement : "), showImage, verbose)
 	
 	# Save
-	nomFichier = raw_input('[INFO] Exportation\nNom de l\'image : ')
-	SaveImage('img/' + nomFichier + '.png', tableau)
+	SaveImage(tableau)
+	
+	#Fin
+	MessageFinProgramme()
 
 main()
