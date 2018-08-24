@@ -79,6 +79,14 @@ def CreerImage(text, version, showImage, verbose):
 		print('[INFO] Methode 3 choisie')
 		return CreationImage3(text, showImage, verbose)
 
+def verifIntensity(eachPix):
+	for eachColor in eachPix:
+		if(eachColor > 255):
+			eachColor = 255
+		elif(eachColor < 0):
+			eachColor = 0
+	return eachPix
+
 def CreationImage(text, showImage, verbose):
 	print('[INFO] Image en Creation')
 	curseur = 0
@@ -177,6 +185,8 @@ def TraitementImage(tableau, pathToBackImage, version, showImage, verbose):
 		Methode1(tableau, pathToBackImage, showImage, verbose)
 	if(version == 2):
 		Methode2(tableau, pathToBackImage, showImage, verbose)
+	if(version == 3):
+		Methode3(tableau, pathToBackImage, showImage, verbose)
 	
 	return tableau
 
@@ -257,7 +267,7 @@ def Methode2(tableau, pathToBackImage, showImage, verbose):
 				eachPix[2] = int(eachPix[2] - float(modif)*blue)
 			
 			if(verbose):
-				print('[INFO] Row : ' + str(indexRow) + 'Pix : ' + str(indexPix))
+				print('[VERSBOSE] Row : ' + str(indexRow) + ' Pix : ' + str(indexPix))
 				print('\t- red : ' + str(eachPix[0]))
 				print('\t- green : ' + str(eachPix[1]))
 				print('\t- blue : ' + str(eachPix[2]))
@@ -265,6 +275,68 @@ def Methode2(tableau, pathToBackImage, showImage, verbose):
 			indexPix = indexPix + 1
 		indexRow = indexRow + 1
 	
+	if(showImage):
+		plt.imshow(tableau)
+		plt.show()
+	
+	return tableau
+
+def Methode3(tableau, pathToBackImage, showImage, verbose):
+	print('[INFO] Methode 3')
+	img = Image.open(pathToBackImage)
+	imgAr = np.array(smisc.imresize(img.copy(), (len(tableau[0]),len(tableau))))
+	print('[INFO] BackImage en cache et redimonsionne')
+	if(input("Pourcentage Couleur pas Couleur ? yes(1) | no(0) ")):
+		red = float(input('Pourcentage de rouge BackImage : '))/100
+		green = float(input('Pourcentage de vert BackImage : '))/100
+		blue = float(input('Pourcentage de bleu BackImage : '))/100
+		redP = float(input('Pourcentage de rouge TextPainted : '))/100
+		greenP = float(input('Pourcentage de vert TextPainted : '))/100
+		blueP = float(input('Pourcentage de bleu TextPainted : '))/100
+	else:
+		pourcentageBackImage = input('Pourcentage de BackImage : ')
+		pourcentageTextPainted = input('Pourcentage de TextPainted : ')
+		red = float(pourcentageBackImage)/100
+		green = float(pourcentageBackImage)/100
+		blue = float(pourcentageBackImage)/100
+		redP = float(pourcentageTextPainted)/100
+		greenP = float(pourcentageTextPainted)/100
+		blueP = float(pourcentageTextPainted)/100
+	indexRow = 0
+	indexPix = 0
+	
+	if(showImage):
+		plt.imshow(imgAr)
+		plt.show()
+	
+	for eachRow in tableau:
+		indexPix = 0
+		for eachPix in eachRow:		
+			if(verbose):
+				print('[VERBOSE] Row : ' + str(indexRow) + ' Pix : ' + str(indexPix))
+				modif = imgAr[indexRow][indexPix]
+				print('BackImage : ' + str(modif))
+				
+				print('\t- red : ' + str(eachPix[0]))
+				eachPix[0] = int( (float(eachPix[0])*redP + float(modif[0])*red) )
+				print('\t- red (new) : ' + str(eachPix[0]))
+				
+				print('\t- green : ' + str(eachPix[1]))
+				eachPix[1] = int( (float(eachPix[1])*greenP + float(modif[1])*green) )
+				print('\t- green (new) : ' + str(eachPix[1]))
+				
+				print('\t- blue : ' + str(eachPix[2]))
+				eachPix[2] = int( (float(eachPix[2])*blueP + float(modif[2])*blue) )
+				print('\t- blue (new) : ' + str(eachPix[2]))
+			else:
+				modif = imgAr[indexRow][indexPix]
+				eachPix[0] = int( (float(eachPix[0])*redP + float(modif[0])*red) )
+				eachPix[1] = int( (float(eachPix[1])*greenP + float(modif[1])*green) )
+				eachPix[2] = int( (float(eachPix[2])*blueP + float(modif[2])*blue) )
+			eachPix = verifIntensity(eachPix)
+			
+			indexPix = indexPix + 1
+		indexRow = indexRow + 1
 	if(showImage):
 		plt.imshow(tableau)
 		plt.show()
@@ -315,15 +387,15 @@ def LoadBackImage(absPath):
 	liste = glob.glob(absPath + "/res/backimage.*")
 	for files in liste:
 		extension = files.split('backimage.')[1]
-		if(extension == 'jpg'):
+		if(extension == 'png'):
+			print('[INFO] Extension : png')
+		elif(extension == 'jpg'):
 			print('[INFO] Extension : jpg\nConversion en png')
 			#ConvertJPGToPNG(files)
-		elif(extension == 'png'):
-			print('[INFO] Extension : png')
 
 def MessageFinProgramme():
 	soon = []
-	soon.append("Traitement de l'image en couleur (et pas que noir et blanc")
+	soon.append("Traitements de l'image en couleur (et pas noir et blanc)")
 	soon.append("Texte en phonetique")
 	soon.append("Recherche du texte sur genius.com")
 	soon.append("Traitement du son")
@@ -364,7 +436,7 @@ def main():
 	tableau = CreerImage(text, 3, showImage, verbose)
 	
 	# Traitement
-	tableau = FocusColors(tableau,  showImage, verbose)
+	tableau = FocusColors(tableau,  showImage, False)
 	tableau = TraitementImage(tableau, pathToBackImage, input("Mode de traitement : "), showImage, verbose)
 	
 	# Save
