@@ -372,8 +372,11 @@ def FocusColors(tableau, showImage, verbose):
 	return tableau
 
 def SaveImage(tableau):
-	plt.imshow(tableau)
-	plt.show()
+	try:
+		plt.imshow(tableau)
+		plt.show()
+	except:
+		print('[ERROR] plt.imshow(); plt.show(); enabled... Please Turn On xming')
 	if(input("Sauver l'image ? yes(1) | no(0) ")):
 		newimage = Image.new('RGB', (len(tableau[0]), len(tableau)))
 		newimage.putdata([tuple(p) for row in tableau for p in row])
