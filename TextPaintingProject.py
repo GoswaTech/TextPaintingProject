@@ -9,6 +9,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 import scipy.misc as smisc
 from math import sqrt
+import wave
+import binascii
 
 def VMin(tab):
 	tmp = 255
@@ -67,6 +69,63 @@ def colorLine(newAr, intensite, curseur):
 def TextToVers(text):
 	vers = text.split('\n')
 	return vers
+
+def FramesToHexa(frames, poids, verbose):
+	print('[INFO] Frames to Hexa')
+	ret = []
+	tmp = ''
+	cnt = 1
+	for eachLettre in frames:
+		if(cnt < poids*2):
+			tmp = tmp + eachLettre
+			cnt = cnt + 1
+		else:
+			ret.append(tmp + eachLettre)
+			tmp = ''
+			cnt = 1
+	if(verbose):
+		print('[VERBSOE] Taille : ' + str(len(ret)) + ' octets')
+		print('\tApercu : ' + str(ret[1323000:1323050]))
+	return ret
+
+def SeparationCanaux(textHexa, verbose):
+	print('[INFO] Separation Canaux')
+	canalG = True
+	textCanaux = [[],[]]
+	for eachValue in textHexa:
+		if(canalG):
+			textCanaux[0].append(eachValue)
+			canalG = False
+		else:
+			textCanaux[1].append(eachValue)
+			canalG = True
+	if(verbose):
+		print('#####\n[VERBOSE] ' + str(len(textCanaux)) + ' Canaux')
+		print(' Taille Canal Gauche : ' + str(len(textCanaux[0])) + ' Echantillons')
+		print('\tApercu : ' + str(textCanaux[0][1323000/2:1323050/2]))
+		print('Taille Canal Droit : ' + str(len(textCanaux[1])) + ' Echantillons')
+		print('\tApercu : ' + str(textCanaux[1][1323000/2:1323050/2]))
+	
+	return textCanaux
+
+def MoySecHex(textCanaux, frameRate, verbose):
+	print('[INFO] Moyenne par seconde')
+	somme = 0
+	moy = [[],[]]
+	for canal in range(2):
+		print('Canal ' + str(canal))
+		for i in range(len(textCanaux[canal])/frameRate):
+			somme = 0
+			for indexValue in range(frameRate):
+				somme = somme + int(textCanaux[canal][i*frameRate + indexValue], 16)
+			
+			somme = somme/frameRate
+			moy[canal].append(somme)
+	
+	if(verbose):
+		print('#####\n[VERBOSE] Taille Canaux : G ' + str(len(moy[0])) + ' | D ' + str(len(moy[1])))
+		print('\tApercu : ' + str(hex(moy[0][1323000/2/frameRate])))
+	return moy
 
 def CreerImage(text, version, showImage, verbose):
 	if(version == 1 ):
@@ -343,6 +402,31 @@ def Methode3(tableau, pathToBackImage, showImage, verbose):
 	
 	return tableau
 
+def TraitementSon(tableau, pathToWave, version, showImage, verbose):
+	print('[INFO] Traitement du Son')
+	# Ouverture et extraction des donnees
+	son = wave.open(pathToWave, 'rb')	# file
+	nbCanaux = son.getnchannels()		# int
+	poids = son.getsampwidth()			# int
+	frameRate = son.getframerate()		# int
+	nbFrames = son.getnframes()			# int
+	
+	# Traitement primaire des donnees
+	nbOctetSec = frameRate*poids		# (int) Nombre d'octet par seconde et par cote
+	
+	
+	# Traitement du son
+	frames = binascii.hexlify(son.readframes(nbFrames))	# str
+	if(verbose):
+		print('[INFO] Lenght : ' + str(len(frames)/2/frameRate/nbCanaux/poids) + ' sec |  Poids : ' + str(poids) + ' octets | FrameRate : ' + str(frameRate) + 'Hz')
+	
+	textHexa = FramesToHexa(frames, poids, verbose)
+	textCanaux = SeparationCanaux(textHexa,verbose)
+	textMoyenneCanaux = MoySecHex(textCanaux, frameRate, verbose)
+	
+	
+	return tableau
+
 def FocusColors(tableau, showImage, verbose):
 	min = float(VMin(tableau))
 	max = float(VMax(tableau))
@@ -372,8 +456,8 @@ def FocusColors(tableau, showImage, verbose):
 	return tableau
 
 def SaveImage(tableau):
-	plt.imshow(tableau)
-	plt.show()
+	#plt.imshow(tableau)
+	#plt.show()
 	if(input("Sauver l'image ? yes(1) | no(0) ")):
 		newimage = Image.new('RGB', (len(tableau[0]), len(tableau)))
 		newimage.putdata([tuple(p) for row in tableau for p in row])
@@ -398,7 +482,7 @@ def MessageFinProgramme():
 	soon.append("Traitements de l'image en couleur (et pas noir et blanc)")
 	soon.append("Texte en phonetique")
 	soon.append("Recherche du texte sur genius.com")
-	soon.append("Traitement du son")
+	soon.append("Traitement du son (branch son)")
 	#soon.append("")
 	
 	print("*\n**\n***\n****\n*****")
@@ -422,9 +506,10 @@ def main():
 	text = open('res/textAPeindre.txt').read()
 	print('[INFO] Text en cache')
 	
-	##### Recherche de l'image a importer
+	##### Recherche de l'image et du son a importer
 	LoadBackImage(absPath)
 	pathToBackImage = absPath + '/res/backimage.png'
+	pathToWave = absPath + '/res/son.wav'
 	
 	##### Mode
 	showImage = input("Show Image ? yes(1) | no(0) ")
@@ -438,6 +523,7 @@ def main():
 	# Traitement
 	tableau = FocusColors(tableau,  showImage, False)
 	tableau = TraitementImage(tableau, pathToBackImage, input("Mode de traitement : "), showImage, verbose)
+	tableau = TraitementSon(tableau, pathToWave, 1, showImage, 1)
 	
 	# Save
 	SaveImage(tableau)
