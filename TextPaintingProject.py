@@ -10,6 +10,8 @@ import matplotlib.pyplot as plt
 import scipy.misc as smisc
 from math import sqrt
 import wave
+import scipy.io.wavfile as waveF
+from numpy.fft import fft
 import binascii
 
 def VMin(tab):
@@ -70,7 +72,7 @@ def TextToVers(text):
 	vers = text.split('\n')
 	return vers
 
-def FramesToHexa(frames, poids, verbose):
+def FramesToHexa(frames, poids, verbose): # frames = binascii.hexlify(son.readframes(nbFrames))
 	print('[INFO] Frames to Hexa')
 	ret = []
 	tmp = ''
@@ -88,7 +90,7 @@ def FramesToHexa(frames, poids, verbose):
 		print('\tApercu : ' + str(ret[1323000:1323050]))
 	return ret
 
-def SeparationCanaux(textHexa, verbose):
+def SeparationCanaux(textHexa, verbose): # textHexa = FrameToHexa()
 	print('[INFO] Separation Canaux')
 	canalG = True
 	textCanaux = [[],[]]
@@ -108,29 +110,47 @@ def SeparationCanaux(textHexa, verbose):
 	
 	return textCanaux
 
-def MoySecHex(textCanaux, frameRate, verbose):
-	print('[INFO] Moyenne par seconde')
+def MoyTHex(textCanaux, N, frameRate, verbose): # textCanaux = SeparationCanaux()
+	print('[INFO] Moyenne par ' + str(float(N)/float(frameRate)) + ' sec')
 	somme = 0
 	moy = [[],[]]
 	for canal in range(2):
-		print('Canal ' + str(canal))
-		for i in range(len(textCanaux[canal])/frameRate):
+		print('[INFO] Canal ' + str(canal) + ' en cours de traitement...')
+		for i in range(len(textCanaux[canal])/N):
 			somme = 0
-			for indexValue in range(frameRate):
-				somme = somme + int(textCanaux[canal][i*frameRate + indexValue], 16)
+			for indexValue in range(N):
+				somme = somme + int(textCanaux[canal][i*N + indexValue], 16)
 			
-			somme = somme/frameRate
+			somme = somme/N
 			moy[canal].append(somme)
 	
 	if(verbose):
 		print('#####\n[VERBOSE] Taille Canaux : G ' + str(len(moy[0])) + ' | D ' + str(len(moy[1])))
-		print('\tApercu : ' + str(hex(moy[0][1323000/2/frameRate])))
+		print('\tApercu : G ' + str(hex(moy[0][1323000/2/N])) + ' | D ' + str(hex(moy[1][1323000/2/N])))
+	
 	return moy
+
+def AnalyseFourier(data,rate,debut,duree):
+	start = int(debut*rate)
+	stop = int((debut+duree)*rate)
+	spectre = np.absolute(fft(data[start:stop]))
+	print('[FOURIER] Lenght Spectre : ' + str(len(spectre)) + ' | Max = ' + str(spectre.max()))
+	
+	return spectre
+
+def MoyFourier(spectre, index, lenTab, lenSpectre, max):
+	sum = 0
+	lenFor = lenSpectre/lenTab
+	for i in range(lenFor):
+		sum = sum + spectre[i + (lenFor*index)][0]
+	sum = (sum / lenFor / max) * 255
+	
+	return sum
 
 def CreerImage(text, version, showImage, verbose):
 	if(version == 1 ):
 		print('[INFO] Methode 1 chosie')
-		return CreationImage(text, showImage, verbose)
+		return CreationImage1(text, showImage, verbose)
 	elif(version == 2):
 		print('[INFO] Methode 2 choisie')
 		return CreationImage2(text, showImage, verbose)
@@ -146,7 +166,7 @@ def verifIntensity(eachPix):
 			eachColor = 0
 	return eachPix
 
-def CreationImage(text, showImage, verbose):
+def CreationImage1(text, showImage, verbose):	# Version 1
 	print('[INFO] Image en Creation')
 	curseur = 0
 	dim = len(text)/3
@@ -171,7 +191,7 @@ def CreationImage(text, showImage, verbose):
 		plt.show()
 	return newAr
 
-def CreationImage2(text, showImage, verbose):
+def CreationImage2(text, showImage, verbose):	# Version 2
 	print('[INFO] Image2 en Creation')
 	curseur = 0
 	dim = len(text)/3
@@ -199,7 +219,7 @@ def CreationImage2(text, showImage, verbose):
 		plt.show()
 	return newAr
 
-def CreationImage3(text, showImage, verbose):
+def CreationImage3(text, showImage, verbose):	# Version 3
 	print('[INFO] Image3 en Creation')
 	curseur = 0
 	vers = TextToVers(text)
@@ -249,7 +269,7 @@ def TraitementImage(tableau, pathToBackImage, version, showImage, verbose):
 	
 	return tableau
 
-def Methode1(tableau, pathToBackImage, showImage, verbose):
+def Methode1(tableau, pathToBackImage, showImage, verbose):	# Text
 	print('[INFO] Methode 1')
 	img = Image.open(pathToBackImage)
 	imgAr = np.array(smisc.imresize(img.copy(), (len(tableau[0]),len(tableau))))
@@ -294,7 +314,7 @@ def Methode1(tableau, pathToBackImage, showImage, verbose):
 	
 	return tableau
 
-def Methode2(tableau, pathToBackImage, showImage, verbose):
+def Methode2(tableau, pathToBackImage, showImage, verbose):	# Test
 	print('[INFO] Methode 2')
 	img = Image.open(pathToBackImage)
 	imgAr = np.array(smisc.imresize(img.copy(), (len(tableau[0]),len(tableau))))
@@ -340,7 +360,7 @@ def Methode2(tableau, pathToBackImage, showImage, verbose):
 	
 	return tableau
 
-def Methode3(tableau, pathToBackImage, showImage, verbose):
+def Methode3(tableau, pathToBackImage, showImage, verbose):	# Text
 	print('[INFO] Methode 3')
 	img = Image.open(pathToBackImage)
 	imgAr = np.array(smisc.imresize(img.copy(), (len(tableau[0]),len(tableau))))
@@ -402,8 +422,9 @@ def Methode3(tableau, pathToBackImage, showImage, verbose):
 	
 	return tableau
 
-def TraitementSon(tableau, pathToWave, version, showImage, verbose):
+def TraitementSon(tableau, pathToWave, version, showImage, verbose):	# Son
 	print('[INFO] Traitement du Son')
+	"""
 	# Ouverture et extraction des donnees
 	son = wave.open(pathToWave, 'rb')	# file
 	nbCanaux = son.getnchannels()		# int
@@ -412,18 +433,34 @@ def TraitementSon(tableau, pathToWave, version, showImage, verbose):
 	nbFrames = son.getnframes()			# int
 	
 	# Traitement primaire des donnees
-	nbOctetSec = frameRate*poids		# (int) Nombre d'octet par seconde et par cote
+	nbOctetSec = frameRate*poids*nbCanaux		# (int) Nombre d'octet par seconde et par cote
 	
 	
-	# Traitement du son
+	# Mise en cache
+	print('[INFO] Mise en cache')
 	frames = binascii.hexlify(son.readframes(nbFrames))	# str
-	if(verbose):
-		print('[INFO] Lenght : ' + str(len(frames)/2/frameRate/nbCanaux/poids) + ' sec |  Poids : ' + str(poids) + ' octets | FrameRate : ' + str(frameRate) + 'Hz')
+	print('[INFO] Lenght : ' + str(len(frames)/2/frameRate/nbCanaux/poids) + ' sec | Poids : ' + str(poids) + ' octets | FrameRate : ' + str(frameRate) + 'Hz')
 	
+	# Decomposition du son par canaux
 	textHexa = FramesToHexa(frames, poids, verbose)
 	textCanaux = SeparationCanaux(textHexa,verbose)
-	textMoyenneCanaux = MoySecHex(textCanaux, frameRate, verbose)
-	
+	textMoyenneCanaux = MoyTHex(textCanaux, input("Nombre d'echantillons par moyenne : "), frameRate, verbose)
+	"""
+	# Analyse de Fourier
+	print('[INFO] Analyse de Fourier')
+	rate, data = waveF.read(pathToWave)
+	debut = 0
+	duree = data.size/rate
+	spectre = AnalyseFourier(data,rate,debut,duree)
+	max = spectre.max()
+	lenSpectre = len(spectre)
+	lenTab = len(tableau)
+	for indexLine in range(lenTab):
+		valueLine = MoyFourier(spectre, indexLine, lenTab, lenSpectre, max)
+		for i in range(lenTab):
+			tableau[i][indexLine][0] = int(tableau[i][indexLine][0]*90 + 10*valueLine)
+			tableau[i][indexLine][1] = int(tableau[i][indexLine][1]*90 + 10*valueLine)
+			tableau[i][indexLine][2] = int(tableau[i][indexLine][2]*90 + 10*valueLine)
 	
 	return tableau
 
@@ -523,7 +560,7 @@ def main():
 	# Traitement
 	tableau = FocusColors(tableau,  showImage, False)
 	tableau = TraitementImage(tableau, pathToBackImage, input("Mode de traitement : "), showImage, verbose)
-	tableau = TraitementSon(tableau, pathToWave, 1, showImage, 1)
+	tableau = TraitementSon(tableau, pathToWave, 1, showImage, verbose)
 	
 	# Save
 	SaveImage(tableau)
