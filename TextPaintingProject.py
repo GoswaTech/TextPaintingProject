@@ -455,12 +455,13 @@ def TraitementSon(tableau, pathToWave, version, showImage, verbose):	# Son
 	max = spectre.max()
 	lenSpectre = len(spectre)
 	lenTab = len(tableau)
+	pourcentage = float(float(input("Pourcentage d'image d'origine : "))/100)
 	for indexLine in range(lenTab):
 		valueLine = MoyFourier(spectre, indexLine, lenTab, lenSpectre, max)
 		for i in range(lenTab):
-			tableau[i][indexLine][0] = int(tableau[i][indexLine][0]*90 + 10*valueLine)
-			tableau[i][indexLine][1] = int(tableau[i][indexLine][1]*90 + 10*valueLine)
-			tableau[i][indexLine][2] = int(tableau[i][indexLine][2]*90 + 10*valueLine)
+			tableau[i][indexLine][0] = int(tableau[i][indexLine][0]*pourcentage + (1.0-pourcentage)*valueLine)
+			tableau[i][indexLine][1] = int(tableau[i][indexLine][1]*pourcentage + (1.0-pourcentage)*valueLine)
+			tableau[i][indexLine][2] = int(tableau[i][indexLine][2]*pourcentage + (1.0-pourcentage)*valueLine)
 	
 	return tableau
 
