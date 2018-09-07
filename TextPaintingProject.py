@@ -379,9 +379,9 @@ def Methode3(tableau, pathToBackImage, showImage, verbose):	# Text
 		red = float(pourcentageBackImage)/100
 		green = float(pourcentageBackImage)/100
 		blue = float(pourcentageBackImage)/100
-		redP = float(100 - pourcentageTextPainted)/100
-		greenP = float(100 - pourcentageTextPainted)/100
-		blueP = float(100 - pourcentageTextPainted)/100
+		redP = float(100 - pourcentageBackImage)/100
+		greenP = float(100 - pourcentageBackImage)/100
+		blueP = float(100 - pourcentageBackImage)/100
 	indexRow = 0
 	indexPix = 0
 	
