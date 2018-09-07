@@ -8,7 +8,7 @@ from PIL import Image
 import numpy as np
 import matplotlib.pyplot as plt
 import scipy.misc as smisc
-from math import sqrt
+from math import sqrt, pow
 import wave
 import scipy.io.wavfile as waveF
 from numpy.fft import fft
@@ -138,11 +138,11 @@ def AnalyseFourier(data,rate,debut,duree):
 	
 	return spectre
 
-def MoyFourier(spectre, index, lenTab, lenSpectre, max):
+def MoyFourier1(spectre, index, lenTab, lenSpectre, max):
 	sum = 0
 	lenFor = lenSpectre/lenTab
 	for i in range(lenFor):
-		sum = sum + spectre[i + (lenFor*index)][0]
+		sum = sum + sqrt((pow(spectre[i + (lenFor*index)][0], 2) + pow(spectre[i + (lenFor*index)][1], 2)))
 	sum = (sum / lenFor / max) * 255
 	
 	return sum
@@ -257,7 +257,9 @@ def CreationImage3(text, showImage, verbose):	# Version 3
 	
 	return newAr
 
-def TraitementImage(tableau, pathToBackImage, version, showImage, verbose):
+def TraitementImage(tableau, pathToBackImage, showImage, verbose):
+	print('[INFO] Traitement Image')
+	version =  input("Mode de traitement : ")
 	if(version == 0):
 		return tableau
 	if(version == 1):
@@ -422,30 +424,17 @@ def Methode3(tableau, pathToBackImage, showImage, verbose):	# Text
 	
 	return tableau
 
-def TraitementSon(tableau, pathToWave, version, showImage, verbose):	# Son
+def TraitementSon(tableau, pathToWave, showImage, verbose):	# Son
 	print('[INFO] Traitement du Son')
-	"""
-	# Ouverture et extraction des donnees
-	son = wave.open(pathToWave, 'rb')	# file
-	nbCanaux = son.getnchannels()		# int
-	poids = son.getsampwidth()			# int
-	frameRate = son.getframerate()		# int
-	nbFrames = son.getnframes()			# int
+	version =  input("Mode de traitement : ")
+	if(version == 0):
+		return tableau
+	if(version == 1):
+		MethodeSon1(tableau, pathToWave, showImage, verbose)
 	
-	# Traitement primaire des donnees
-	nbOctetSec = frameRate*poids*nbCanaux		# (int) Nombre d'octet par seconde et par cote
-	
-	
-	# Mise en cache
-	print('[INFO] Mise en cache')
-	frames = binascii.hexlify(son.readframes(nbFrames))	# str
-	print('[INFO] Lenght : ' + str(len(frames)/2/frameRate/nbCanaux/poids) + ' sec | Poids : ' + str(poids) + ' octets | FrameRate : ' + str(frameRate) + 'Hz')
-	
-	# Decomposition du son par canaux
-	textHexa = FramesToHexa(frames, poids, verbose)
-	textCanaux = SeparationCanaux(textHexa,verbose)
-	textMoyenneCanaux = MoyTHex(textCanaux, input("Nombre d'echantillons par moyenne : "), frameRate, verbose)
-	"""
+	return tableau
+
+def MethodeSon1(tableau, pathToWave, showImage, verbose):
 	# Analyse de Fourier
 	print('[INFO] Analyse de Fourier')
 	rate, data = waveF.read(pathToWave)
@@ -457,7 +446,7 @@ def TraitementSon(tableau, pathToWave, version, showImage, verbose):	# Son
 	lenTab = len(tableau)
 	pourcentage = float(float(input("Pourcentage d'image d'origine : "))/100)
 	for indexLine in range(lenTab):
-		valueLine = MoyFourier(spectre, indexLine, lenTab, lenSpectre, max)
+		valueLine = MoyFourier1(spectre, indexLine, lenTab, lenSpectre, max)
 		for i in range(lenTab):
 			tableau[i][indexLine][0] = int(tableau[i][indexLine][0]*pourcentage + (1.0-pourcentage)*valueLine)
 			tableau[i][indexLine][1] = int(tableau[i][indexLine][1]*pourcentage + (1.0-pourcentage)*valueLine)
@@ -494,8 +483,12 @@ def FocusColors(tableau, showImage, verbose):
 	return tableau
 
 def SaveImage(tableau):
-	#plt.imshow(tableau)
-	#plt.show()
+	try:
+		plt.imshow(tableau)
+		plt.show()
+	except:
+		print('[ERROR] plt.imshow(); plt.show(); enabled... Please Turn On xming')
+	
 	if(input("Sauver l'image ? yes(1) | no(0) ")):
 		newimage = Image.new('RGB', (len(tableau[0]), len(tableau)))
 		newimage.putdata([tuple(p) for row in tableau for p in row])
@@ -560,8 +553,8 @@ def main():
 	
 	# Traitement
 	tableau = FocusColors(tableau,  showImage, False)
-	tableau = TraitementImage(tableau, pathToBackImage, input("Mode de traitement : "), showImage, verbose)
-	tableau = TraitementSon(tableau, pathToWave, 1, showImage, verbose)
+	tableau = TraitementImage(tableau, pathToBackImage, showImage, verbose)
+	tableau = TraitementSon(tableau, pathToWave, showImage, verbose)
 	
 	# Save
 	SaveImage(tableau)
