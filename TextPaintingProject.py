@@ -14,6 +14,10 @@ import scipy.io.wavfile as waveF
 from numpy.fft import fft
 import binascii
 
+#################
+##### TOOLS #####
+#################
+
 def VMin(tab):
 	tmp = 255
 	for eachRaw in tab:
@@ -47,6 +51,10 @@ def searchIMax(tab):
 			cur = cur + 1
 	return ret
 
+################
+##### TEXT #####
+################
+
 def NoirEtBlanc(imgAr):
 	for eachRow in imgAr:
 		for eachPix in eachRow:
@@ -68,96 +76,6 @@ def colorLine(newAr, intensite, curseur):
 		eachPix[curseur%3] = intensite
 	return newAr
 
-def TextToVers(text):
-	vers = text.split('\n')
-	return vers
-
-def FramesToHexa(frames, poids, verbose): # frames = binascii.hexlify(son.readframes(nbFrames))
-	print('[INFO] Frames to Hexa')
-	ret = []
-	tmp = ''
-	cnt = 1
-	for eachLettre in frames:
-		if(cnt < poids*2):
-			tmp = tmp + eachLettre
-			cnt = cnt + 1
-		else:
-			ret.append(tmp + eachLettre)
-			tmp = ''
-			cnt = 1
-	if(verbose):
-		print('[VERBSOE] Taille : ' + str(len(ret)) + ' octets')
-		print('\tApercu : ' + str(ret[1323000:1323050]))
-	return ret
-
-def SeparationCanaux(textHexa, verbose): # textHexa = FrameToHexa()
-	print('[INFO] Separation Canaux')
-	canalG = True
-	textCanaux = [[],[]]
-	for eachValue in textHexa:
-		if(canalG):
-			textCanaux[0].append(eachValue)
-			canalG = False
-		else:
-			textCanaux[1].append(eachValue)
-			canalG = True
-	if(verbose):
-		print('#####\n[VERBOSE] ' + str(len(textCanaux)) + ' Canaux')
-		print(' Taille Canal Gauche : ' + str(len(textCanaux[0])) + ' Echantillons')
-		print('\tApercu : ' + str(textCanaux[0][1323000/2:1323050/2]))
-		print('Taille Canal Droit : ' + str(len(textCanaux[1])) + ' Echantillons')
-		print('\tApercu : ' + str(textCanaux[1][1323000/2:1323050/2]))
-	
-	return textCanaux
-
-def MoyTHex(textCanaux, N, frameRate, verbose): # textCanaux = SeparationCanaux()
-	print('[INFO] Moyenne par ' + str(float(N)/float(frameRate)) + ' sec')
-	somme = 0
-	moy = [[],[]]
-	for canal in range(2):
-		print('[INFO] Canal ' + str(canal) + ' en cours de traitement...')
-		for i in range(len(textCanaux[canal])/N):
-			somme = 0
-			for indexValue in range(N):
-				somme = somme + int(textCanaux[canal][i*N + indexValue], 16)
-			
-			somme = somme/N
-			moy[canal].append(somme)
-	
-	if(verbose):
-		print('#####\n[VERBOSE] Taille Canaux : G ' + str(len(moy[0])) + ' | D ' + str(len(moy[1])))
-		print('\tApercu : G ' + str(hex(moy[0][1323000/2/N])) + ' | D ' + str(hex(moy[1][1323000/2/N])))
-	
-	return moy
-
-def AnalyseFourier(data,rate,debut,duree):
-	start = int(debut*rate)
-	stop = int((debut+duree)*rate)
-	spectre = np.absolute(fft(data[start:stop]))
-	print('[FOURIER] Lenght Spectre : ' + str(len(spectre)) + ' | Max = ' + str(spectre.max()))
-	
-	return spectre
-
-def MoyFourier1(spectre, index, lenTab, lenSpectre, max):
-	sum = 0
-	lenFor = lenSpectre/lenTab
-	for i in range(lenFor):
-		sum = sum + sqrt((pow(spectre[i + (lenFor*index)][0], 2) + pow(spectre[i + (lenFor*index)][1], 2)))
-	sum = (sum / lenFor / max) * 255
-	
-	return sum
-
-def CreerImage(text, version, showImage, verbose):
-	if(version == 1 ):
-		print('[INFO] Methode 1 chosie')
-		return CreationImage1(text, showImage, verbose)
-	elif(version == 2):
-		print('[INFO] Methode 2 choisie')
-		return CreationImage2(text, showImage, verbose)
-	elif(version == 3):
-		print('[INFO] Methode 3 choisie')
-		return CreationImage3(text, showImage, verbose)
-
 def verifIntensity(eachPix):
 	for eachColor in eachPix:
 		if(eachColor > 255):
@@ -166,60 +84,44 @@ def verifIntensity(eachPix):
 			eachColor = 0
 	return eachPix
 
-def CreationImage1(text, showImage, verbose):	# Version 1
-	print('[INFO] Image en Creation')
-	curseur = 0
-	dim = len(text)/3
-	newAr = np.array(Image.new('RGB', (int(sqrt(dim)), int(sqrt(dim)))))
-	print('[INFO] Dimensions image : ' + str(dim))
-	for eachRow in newAr:
-		for eachPix in eachRow:
-			premiereLettre = colorIt(curseur, text, 0)
-			deuxiemeLettre = colorIt(curseur, text, 1)
-			troisiemeLettre = colorIt(curseur, text, 2)
-			eachPix[0] = premiereLettre
-			eachPix[1] = deuxiemeLettre
-			eachPix[2] = troisiemeLettre
-			curseur = curseur + 1
-			if(verbose):
-				print('Pix : ' + str(curseur) + str(eachPix))
-				print('\t- Red : ' + str(eachPix[0]))
-				print('\t- Green : ' + str(eachPix[1]))
-				print('\t- Blue : ' + str(eachPix[2]))
-	if(showImage):
-		plt.imshow(newAr)
-		plt.show()
-	return newAr
+def TextToVers(text):
+	vers = text.split('\n')
+	return vers
 
-def CreationImage2(text, showImage, verbose):	# Version 2
-	print('[INFO] Image2 en Creation')
-	curseur = 0
-	dim = len(text)/3
-	if(len(text)%3 != 0):
-		dim = dim + 1
+def FocusColors(tableau, showImage, verbose):
+	min = float(VMin(tableau))
+	max = float(VMax(tableau))
+	print('[INFO] Min : ' + str(int(min)) + ' Max : ' + str(int(max)))
+	if(verbose):
+		for eachRow in tableau:
+			for eachPix in eachRow:
+				print('\t- red : ' + str(eachPix[0]))
+				eachPix[0] = int((float(eachPix[0])-min)/(max-min)*255)
+				print('\t-> - red : ' + str(eachPix[0]))
+				print('\t- green : ' + str(eachPix[1]))
+				eachPix[1] = int((float(eachPix[1])-min)/(max-min)*255)
+				print('\t-> - green : ' + str(eachPix[1]))
+				print('\t- blue : ' + str(eachPix[2]))
+				eachPix[2] = int((float(eachPix[2])-min)/(max-min)*255)
+				print('\t-> - blue : ' + str(eachPix[2]))
+	else:
+		for eachRow in tableau:
+			for eachPix in eachRow:
+				eachPix[0] = int((float(eachPix[0])-min)/(max-min)*255)
+				eachPix[1] = int((float(eachPix[1])-min)/(max-min)*255)
+				eachPix[2] = int((float(eachPix[2])-min)/(max-min)*255)
+	if(showImage):
+		plt.imshow(tableau)
+		plt.show()
 	
-	newAr = np.array(Image.new('RGB', (dim, dim)))
-	print('[INFO] Dimensions image : ' + str(dim))
-	for eachRow in newAr:
-		premiereLettre = colorIt(curseur, text, 0)
-		deuxiemeLettre = colorIt(curseur, text, 1)
-		troisiemeLettre = colorIt(curseur, text, 2)
-		if(verbose):
-			print('Row : ' + str(curseur))
-			print('\t- Red : ' + str(premiereLettre) + ' (' + chr(premiereLettre) + ')')
-			print('\t- Green : ' + str(deuxiemeLettre) + ' (' + chr(deuxiemeLettre) + ')')
-			print('\t- Blue : ' + str(troisiemeLettre) + ' (' + chr(troisiemeLettre) + ')')
-		for eachPix in eachRow:
-			eachPix[0] = premiereLettre
-			eachPix[1] = deuxiemeLettre
-			eachPix[2] = troisiemeLettre
-		curseur = curseur + 1
-	if(showImage):
-		plt.imshow(newAr)
-		plt.show()
-	return newAr
+	return tableau
 
-def CreationImage3(text, showImage, verbose):	# Version 3
+def CreerImage(text, version, showImage, verbose):
+	if((version == 1) or (version == 0)):
+		print('[INFO] Methode 1 choisie')
+		return CreationImage1(text, showImage, verbose)
+
+def CreationImage1(text, showImage, verbose):
 	print('[INFO] Image3 en Creation')
 	curseur = 0
 	vers = TextToVers(text)
@@ -257,6 +159,21 @@ def CreationImage3(text, showImage, verbose):	# Version 3
 	
 	return newAr
 
+#################
+##### IMAGE #####
+#################
+
+def LoadBackImage(absPath):
+	print('[INFO] Loading BackImage')
+	liste = glob.glob(absPath + "/res/backimage.*")
+	for files in liste:
+		extension = files.split('backimage.')[1]
+		if(extension == 'png'):
+			print('[INFO] Extension : png')
+		elif(extension == 'jpg'):
+			print('[INFO] Extension : jpg\nConversion en png')
+			#ConvertJPGToPNG(files)
+
 def TraitementImage(tableau, pathToBackImage, showImage, verbose):
 	print('[INFO] Traitement Image')
 	version =  input("Mode de traitement : ")
@@ -271,7 +188,7 @@ def TraitementImage(tableau, pathToBackImage, showImage, verbose):
 	
 	return tableau
 
-def Methode1(tableau, pathToBackImage, showImage, verbose):	# Text
+def Methode1(tableau, pathToBackImage, showImage, verbose):
 	print('[INFO] Methode 1')
 	img = Image.open(pathToBackImage)
 	imgAr = np.array(smisc.imresize(img.copy(), (len(tableau[0]),len(tableau))))
@@ -316,7 +233,7 @@ def Methode1(tableau, pathToBackImage, showImage, verbose):	# Text
 	
 	return tableau
 
-def Methode2(tableau, pathToBackImage, showImage, verbose):	# Test
+def Methode2(tableau, pathToBackImage, showImage, verbose):
 	print('[INFO] Methode 2')
 	img = Image.open(pathToBackImage)
 	imgAr = np.array(smisc.imresize(img.copy(), (len(tableau[0]),len(tableau))))
@@ -362,7 +279,7 @@ def Methode2(tableau, pathToBackImage, showImage, verbose):	# Test
 	
 	return tableau
 
-def Methode3(tableau, pathToBackImage, showImage, verbose):	# Text
+def Methode3(tableau, pathToBackImage, showImage, verbose):
 	print('[INFO] Methode 3')
 	img = Image.open(pathToBackImage)
 	imgAr = np.array(smisc.imresize(img.copy(), (len(tableau[0]),len(tableau))))
@@ -423,7 +340,40 @@ def Methode3(tableau, pathToBackImage, showImage, verbose):	# Text
 	
 	return tableau
 
-def TraitementSon(tableau, pathToWave, showImage, verbose):	# Son
+###############
+##### SON #####
+###############
+
+def LoadWave(absPath):
+	print('[INFO] Loading Wave')
+	liste = glob.glob(absPath + "/res/son.*")
+	for files in liste:
+		extension = files.split('son.')[1]
+		if(extension == 'wav'):
+			print('[INFO] Extension : wav')
+		elif(extension == 'mp3'):
+			print('[INFO] Extension : mp3\nConversion en wav')
+			#ConvertMP3ToWAV(files)
+
+def AnalyseFourier(data,rate,debut,duree):
+	start = int(debut*rate)
+	stop = int((debut+duree)*rate)
+	spectre = np.absolute(fft(data[start:stop]))
+	print('[FOURIER] Lenght Spectre : ' + str(len(spectre)) + ' | Max = ' + str(spectre.max()))
+	
+	return spectre
+
+def MoyFourier1(spectre, index, lenTab, lenSpectre, max):
+	sum = 0
+	lenFor = lenSpectre/lenTab
+	if(lenFor > 0):
+		for i in range(lenFor):
+			sum = sum + sqrt((pow(spectre[i + (lenFor*index)][0], 2) + pow(spectre[i + (lenFor*index)][1], 2)))
+		sum = (sum / lenFor / max) * 255
+		
+	return sum
+
+def TraitementSon(tableau, pathToWave, showImage, verbose):
 	print('[INFO] Traitement du Son')
 	version =  input("Mode de traitement : ")
 	if(version == 0):
@@ -453,33 +403,9 @@ def MethodeSon1(tableau, pathToWave, showImage, verbose):
 	
 	return tableau
 
-def FocusColors(tableau, showImage, verbose):
-	min = float(VMin(tableau))
-	max = float(VMax(tableau))
-	print('[INFO] Min : ' + str(int(min)) + ' Max : ' + str(int(max)))
-	if(verbose):
-		for eachRow in tableau:
-			for eachPix in eachRow:
-				print('\t- red : ' + str(eachPix[0]))
-				eachPix[0] = int((float(eachPix[0])-min)/(max-min)*255)
-				print('\t-> - red : ' + str(eachPix[0]))
-				print('\t- green : ' + str(eachPix[1]))
-				eachPix[1] = int((float(eachPix[1])-min)/(max-min)*255)
-				print('\t-> - green : ' + str(eachPix[1]))
-				print('\t- blue : ' + str(eachPix[2]))
-				eachPix[2] = int((float(eachPix[2])-min)/(max-min)*255)
-				print('\t-> - blue : ' + str(eachPix[2]))
-	else:
-		for eachRow in tableau:
-			for eachPix in eachRow:
-				eachPix[0] = int((float(eachPix[0])-min)/(max-min)*255)
-				eachPix[1] = int((float(eachPix[1])-min)/(max-min)*255)
-				eachPix[2] = int((float(eachPix[2])-min)/(max-min)*255)
-	if(showImage):
-		plt.imshow(tableau)
-		plt.show()
-	
-	return tableau
+###########################
+##### CLOSE PROGRAMME #####
+###########################
 
 def SaveImage(tableau):
 	try:
@@ -496,23 +422,11 @@ def SaveImage(tableau):
 	else:
 		print('[INFO] Image Non Sauvee')
 
-def LoadBackImage(absPath):
-	print('[INFO] Loading BackImage')
-	liste = glob.glob(absPath + "/res/backimage.*")
-	for files in liste:
-		extension = files.split('backimage.')[1]
-		if(extension == 'png'):
-			print('[INFO] Extension : png')
-		elif(extension == 'jpg'):
-			print('[INFO] Extension : jpg\nConversion en png')
-			#ConvertJPGToPNG(files)
-
 def MessageFinProgramme():
+	# Data
 	soon = []
-	soon.append("Traitements de l'image en couleur (et pas noir et blanc)")
 	soon.append("Texte en phonetique")
 	soon.append("Recherche du texte sur genius.com")
-	soon.append("Traitement du son (branch son)")
 	#soon.append("")
 	
 	print("*\n**\n***\n****\n*****")
@@ -521,6 +435,10 @@ def MessageFinProgramme():
 	for module in soon:
 		print("\t- " + module)
 	print("*****\n****\n***\n**\n*")
+
+################
+##### MAIN #####
+################
 
 def main():
 	##### Initiation de l'environnement de travail
@@ -539,6 +457,7 @@ def main():
 	##### Recherche de l'image et du son a importer
 	LoadBackImage(absPath)
 	pathToBackImage = absPath + '/res/backimage.png'
+	LoadWave(absPath)
 	pathToWave = absPath + '/res/son.wav'
 	
 	##### Mode
@@ -548,10 +467,10 @@ def main():
 	##### Image
 	
 	# Creation
-	tableau = CreerImage(text, 3, showImage, verbose)
+	tableau = CreerImage(text, 1, showImage, verbose)
 	
 	# Traitement
-	tableau = FocusColors(tableau,  showImage, False)
+	tableau = FocusColors(tableau, showImage, False)
 	tableau = TraitementImage(tableau, pathToBackImage, showImage, verbose)
 	tableau = TraitementSon(tableau, pathToWave, showImage, verbose)
 	
