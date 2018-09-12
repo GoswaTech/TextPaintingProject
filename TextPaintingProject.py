@@ -13,6 +13,9 @@ import wave
 import scipy.io.wavfile as waveF
 from numpy.fft import fft
 import binascii
+import Tkinter
+import ttk
+from tkMessageBox import *
 
 #################
 ##### TOOLS #####
@@ -172,133 +175,33 @@ def LoadBackImage(absPath):
 			print('[INFO] Extension : png')
 		elif(extension == 'jpg'):
 			print('[INFO] Extension : jpg\nConversion en png')
-			#ConvertJPGToPNG(files)
+			#ConvertJPGTkinter.TOPNG(files)
 
 def TraitementImage(tableau, pathToBackImage, showImage, verbose):
 	print('[INFO] Traitement Image')
-	version =  input("Mode de traitement : ")
+	version =  versionImage.get()
 	if(version == 0):
 		return tableau
 	if(version == 1):
 		Methode1(tableau, pathToBackImage, showImage, verbose)
-	if(version == 2):
-		Methode2(tableau, pathToBackImage, showImage, verbose)
-	if(version == 3):
-		Methode3(tableau, pathToBackImage, showImage, verbose)
 	
 	return tableau
 
 def Methode1(tableau, pathToBackImage, showImage, verbose):
-	print('[INFO] Methode 1')
-	img = Image.open(pathToBackImage)
-	imgAr = np.array(smisc.imresize(img.copy(), (len(tableau[0]),len(tableau))))
-	print('[INFO] BackImage en cache et redimonsionne')
-	diviseur = input('Saisir N (Intensite/N) : ')
-	indexRow = 0
-	indexPix = 0
-	
-	for eachRow in imgAr:
-		for eachPix in eachRow:
-			moy = (eachPix[0] + eachPix[1] + eachPix[2])/3
-			eachPix[0] = moy
-			eachPix[1] = moy
-			eachPix[2] = moy
-			
-			if(verbose):
-				print('Moy : ' + str(moy))
-	
-	if(showImage):
-		plt.imshow(imgAr)
-		plt.show()
-	
-	for eachRow in tableau:
-		indexPix = 0
-		for eachPix in eachRow:
-			modif = imgAr[indexRow][indexPix][0]/diviseur
-			iMax = searchIMax(eachPix)
-			eachPix[iMax] = int(eachPix[iMax] + modif)
-			
-			if(verbose):
-				print('[INFO] Row : ' + str(indexRow) + 'Pix : ' + str(indexPix))
-				print('\t- red : ' + str(eachPix[0]))
-				print('\t- green : ' + str(eachPix[1]))
-				print('\t- blue : ' + str(eachPix[2]))
-			
-			indexPix = indexPix + 1
-		indexRow = indexRow + 1
-	
-	if(showImage):
-		plt.imshow(tableau)
-		plt.show()
-	
-	return tableau
-
-def Methode2(tableau, pathToBackImage, showImage, verbose):
-	print('[INFO] Methode 2')
-	img = Image.open(pathToBackImage)
-	imgAr = np.array(smisc.imresize(img.copy(), (len(tableau[0]),len(tableau))))
-	print('[INFO] BackImage en cache et redimonsionne')
-	red = float(input('Pourcentage de rouge : '))/100
-	green = float(input('Pourcentage de vert : '))/100
-	blue = float(input('Pourcentage de bleu : '))/100
-	addition = input('Addition (1) | Soustraction (0) : ')
-	indexRow = 0
-	indexPix = 0
-	
-	imgAr = NoirEtBlanc(imgAr)
-	
-	if(showImage):
-		plt.imshow(imgAr)
-		plt.show()
-	
-	for eachRow in tableau:
-		indexPix = 0
-		for eachPix in eachRow:
-			modif = imgAr[indexRow][indexPix][0]
-			if(addition):
-				eachPix[0] = int(eachPix[0] + float(modif)*red)
-				eachPix[1] = int(eachPix[1] + float(modif)*green)
-				eachPix[2] = int(eachPix[2] + float(modif)*blue)
-			else:
-				eachPix[0] = int(eachPix[0] - float(modif)*red)
-				eachPix[1] = int(eachPix[1] - float(modif)*green)
-				eachPix[2] = int(eachPix[2] - float(modif)*blue)
-			
-			if(verbose):
-				print('[VERSBOSE] Row : ' + str(indexRow) + ' Pix : ' + str(indexPix))
-				print('\t- red : ' + str(eachPix[0]))
-				print('\t- green : ' + str(eachPix[1]))
-				print('\t- blue : ' + str(eachPix[2]))
-			
-			indexPix = indexPix + 1
-		indexRow = indexRow + 1
-	
-	if(showImage):
-		plt.imshow(tableau)
-		plt.show()
-	
-	return tableau
-
-def Methode3(tableau, pathToBackImage, showImage, verbose):
 	print('[INFO] Methode 3')
 	img = Image.open(pathToBackImage)
 	imgAr = np.array(smisc.imresize(img.copy(), (len(tableau[0]),len(tableau))))
 	print('[INFO] BackImage en cache et redimonsionne')
-	if(input("Pourcentage Couleur pas Couleur ? yes(1) | no(0) ")):
-		red = float(input('Pourcentage de rouge BackImage : '))/100
-		green = float(input('Pourcentage de vert BackImage : '))/100
-		blue = float(input('Pourcentage de bleu BackImage : '))/100
-		redP = 1.0 - red
-		greenP = 1.0 - green
-		blueP = 1.0 - blue
-	else:
-		pourcentageBackImage = input('Pourcentage de BackImage : ')
-		red = float(pourcentageBackImage)/100
-		green = float(pourcentageBackImage)/100
-		blue = float(pourcentageBackImage)/100
-		redP = float(100 - pourcentageBackImage)/100
-		greenP = float(100 - pourcentageBackImage)/100
-		blueP = float(100 - pourcentageBackImage)/100
+	
+	pourcentageBackImage = float(valueScaleImage.get())
+	print('[INFO] Pourcentage de BackImage : ' + str(valueScaleImage.get()) + '%')
+	red = float(pourcentageBackImage)/100
+	green = float(pourcentageBackImage)/100
+	blue = float(pourcentageBackImage)/100
+	redP = float(100 - pourcentageBackImage)/100
+	greenP = float(100 - pourcentageBackImage)/100
+	blueP = float(100 - pourcentageBackImage)/100
+	
 	indexRow = 0
 	indexPix = 0
 	
@@ -375,7 +278,7 @@ def MoyFourier1(spectre, index, lenTab, lenSpectre, max):
 
 def TraitementSon(tableau, pathToWave, showImage, verbose):
 	print('[INFO] Traitement du Son')
-	version =  input("Mode de traitement : ")
+	version =  versionSon.get()
 	if(version == 0):
 		return tableau
 	if(version == 1):
@@ -393,7 +296,8 @@ def MethodeSon1(tableau, pathToWave, showImage, verbose):
 	max = spectre.max()
 	lenSpectre = len(spectre)
 	lenTab = len(tableau)
-	pourcentage = float(float(input("Pourcentage d'image d'origine : "))/100)
+	pourcentage = float(float(valueScaleSon.get())/100)
+	print('[INFO] Pourcentage Image Origine : ' + str(valueScaleSon.get()) + '%')
 	for indexLine in range(lenTab):
 		valueLine = MoyFourier1(spectre, indexLine, lenTab, lenSpectre, max)
 		for i in range(lenTab):
@@ -403,21 +307,180 @@ def MethodeSon1(tableau, pathToWave, showImage, verbose):
 	
 	return tableau
 
+#####################
+##### GRAPHIQUE #####
+#####################
+
+def ButtonSave():
+	global tableauFinal
+	
+	#Save
+	SaveImage(tableauFinal)
+	
+	#Fin
+	MessageFinProgramme()
+	
+	##### Destruction des pack
+	entrySave.pack_forget()
+	boutonSave.pack_forget()
+	boutonSkip.pack_forget()
+	
+	ParametresScreen()
+
+def ButtonSkip():
+	#Fin
+	MessageFinProgramme()
+	
+	##### Destruction des pack
+	entrySave.pack_forget()
+	boutonSave.pack_forget()
+	boutonSkip.pack_forget()
+	
+	ParametresScreen()
+
+def Conversion():
+	##### Destruction des pack
+	fenetreParametresText.pack_forget()
+	fenetreParametresImage.pack_forget()
+	fenetreParametresSon.pack_forget()
+	boutonConversion.pack_forget()
+	
+	##### Initiation de l'environnement de travail
+	absPath = os.path.abspath('.')
+	try:
+		os.mkdir(absPath + '/img')
+		print('[INFO] Dossier img cree')
+	except:
+		print('[INFO] Dossier img existant')
+	
+	##### Mise en memoire des variables
+	print('[INFO] Programme Lance')
+	text = open('res/textAPeindre.txt').read()
+	print('[INFO] Text en cache')
+	
+	##### Recherche de l'image et du son a importer
+	LoadBackImage(absPath)
+	pathToBackImage = absPath + '/res/backimage.png'
+	LoadWave(absPath)
+	pathToWave = absPath + '/res/son.wav'
+	
+	##### Mode
+	#showImage = input("Show Image ? yes(1) | no(0) ")
+	showImage = False
+	#verbose = input("Verbose ? yes(1) | no(0) ")
+	verbose = False
+	
+	##### Traitement
+	
+	# TEXT
+	progressBarText.pack(side=Tkinter.TOP)
+	progressBarText.start()
+	tableau = CreerImage(text, versionText.get(), showImage, verbose)
+	tableau = FocusColors(tableau, showImage, False)
+	progressBarText.pack_forget()
+	
+	# IMAGE
+	progressBarImage.pack(side=Tkinter.TOP)
+	progressBarImage.start()
+	tableau = TraitementImage(tableau, pathToBackImage, showImage, verbose)
+	progressBarImage.pack_forget()
+	
+	# SON
+	progressBarSon.pack(side=Tkinter.TOP)
+	progressBarSon.start()
+	tableau = TraitementSon(tableau, pathToWave, showImage, verbose)
+	progressBarSon.pack_forget()
+	
+	global tableauFinal
+	tableauFinal = tableau
+	
+	##### Construction des pack
+	SaveScreen()
+
+def SaveScreen():
+	# - - - -#
+	# DROITE #
+	#- - - - #
+	
+	#| SAVE
+	entrySave.pack()
+	boutonSave.pack()
+	boutonSkip.pack()
+
+def ParametresScreen():
+	# - - - -#
+	# GAUCHE #
+	#- - - - #
+	
+	fenetreGauche.pack(side=Tkinter.LEFT, fill=Tkinter.X, expand=0)
+	
+	#| TEXT
+	fenetreText.pack(side=Tkinter.TOP, fill=Tkinter.X, expand=0)
+	
+	#-| FichierText
+	fenetreFichierText.pack(side=Tkinter.LEFT, fill=Tkinter.X, expand=0)
+	labelText.pack(fill=Tkinter.X, expand=0)
+	
+	#-| ParametresText
+	fenetreParametresText.pack(side=Tkinter.LEFT, fill=Tkinter.X, expand=0)
+	boutonVersionText1.pack(side=Tkinter.LEFT, fill=Tkinter.X, expand=0)
+	
+	
+	#| IMAGE
+	fenetreImage.pack(side=Tkinter.TOP, fill=Tkinter.X, expand=0)
+	
+	#-| FichierImage
+	fenetreFichierImage.pack(side=Tkinter.LEFT, fill=Tkinter.X, expand=0)
+	labelImage.pack(fill=Tkinter.X, expand=0)
+	
+	#-| ParametresImage
+	fenetreParametresImage.pack(side=Tkinter.LEFT, fill=Tkinter.X, expand=0)
+	boutonVersionImage0.pack(side=Tkinter.LEFT, fill=Tkinter.X, expand=0)
+	boutonVersionImage1.pack(side=Tkinter.LEFT, fill=Tkinter.X, expand=0)
+	scaleImage.pack(side=Tkinter.LEFT)
+	
+	
+	#| SON
+	fenetreSon.pack(side=Tkinter.TOP, fill=Tkinter.X, expand=0)
+	
+	#-| FichierSon
+	fenetreFichierSon.pack(side=Tkinter.LEFT, fill=Tkinter.X, expand=0)
+	labelSon.pack(fill=Tkinter.X, expand=0)
+
+	#-| ParametresSon
+	fenetreParametresSon.pack(side=Tkinter.LEFT, fill=Tkinter.X, expand=0)
+	boutonVersionSon0.pack(side=Tkinter.LEFT, fill=Tkinter.X, expand=0)
+	boutonVersionSon1.pack(side=Tkinter.LEFT, fill=Tkinter.X, expand=0)
+	scaleSon.pack(side=Tkinter.LEFT)
+	
+	
+	# - - - -#
+	# DROITE #
+	#- - - - #
+	
+	fenetreDroite.pack(side=Tkinter.LEFT)
+	
+	#| CONVERT
+	boutonConversion.pack()
+	
+	# - - - -#
+	# SELECT #
+	#- - - - #
+	
+	boutonVersionText1.select()
+	boutonVersionSon1.select()
+	boutonVersionImage1.select()
+
 ###########################
 ##### CLOSE PROGRAMME #####
 ###########################
 
 def SaveImage(tableau):
-	try:
-		plt.imshow(tableau)
-		plt.show()
-	except:
-		print('[ERROR] plt.imshow(); plt.show(); enabled... Please Turn On xming')
-	
-	if(input("Sauver l'image ? yes(1) | no(0) ")):
+	if askyesno("Save Image", "Etes-vous sur de vouloir enregistrer l'image ?"):
 		newimage = Image.new('RGB', (len(tableau[0]), len(tableau)))
 		newimage.putdata([tuple(p) for row in tableau for p in row])
-		newimage.save('img/' + raw_input('[INFO] Exportation\nNom de l\'image : ') + '.png')
+		print('[INFO] Exportation')
+		newimage.save('img/' + nameSave.get() + '.png')
 		print('[INFO] Image Sauvee')
 	else:
 		print('[INFO] Image Non Sauvee')
@@ -440,44 +503,110 @@ def MessageFinProgramme():
 ##### MAIN #####
 ################
 
-def main():
-	##### Initiation de l'environnement de travail
-	absPath = os.path.abspath('.')
-	try:
-		os.mkdir(absPath + '/img')
-		print('[INFO] Dossier img cree')
-	except:
-		print('[INFO] Dossier img existant')
-	
-	##### Mise en memoire des variables
-	print('[INFO] Programme Lance')
-	text = open('res/textAPeindre.txt').read()
-	print('[INFO] Text en cache')
-	
-	##### Recherche de l'image et du son a importer
-	LoadBackImage(absPath)
-	pathToBackImage = absPath + '/res/backimage.png'
-	LoadWave(absPath)
-	pathToWave = absPath + '/res/son.wav'
-	
-	##### Mode
-	showImage = input("Show Image ? yes(1) | no(0) ")
-	verbose = input("Verbose ? yes(1) | no(0) ")
-	
-	##### Image
-	
-	# Creation
-	tableau = CreerImage(text, 1, showImage, verbose)
-	
-	# Traitement
-	tableau = FocusColors(tableau, showImage, False)
-	tableau = TraitementImage(tableau, pathToBackImage, showImage, verbose)
-	tableau = TraitementSon(tableau, pathToWave, showImage, verbose)
-	
-	# Save
-	SaveImage(tableau)
-	
-	#Fin
-	MessageFinProgramme()
+#-------------------------
+# Initialisation de Tkinter
+#-------------------------
 
-main()
+mainTk = Tkinter.Tk()
+mainTk.title("GhostColor")
+
+#-------------------------
+# Variables Globales
+#-------------------------
+
+global tableauFinal
+
+#-------------------------
+# Tkinter
+#-------------------------
+
+# - - - -#
+# GAUCHE #
+#- - - - #
+
+fenetreGauche = Tkinter.Frame(mainTk)
+
+#| TEXT
+fenetreText = Tkinter.Frame(fenetreGauche)
+
+#-| FichierText
+fenetreFichierText = Tkinter.LabelFrame(fenetreText, text="TEXT")
+labelText = Tkinter.Label(fenetreFichierText, text="------------------------------------\ntextAPeindre.txt\n------------------------------------")
+progressBarText = ttk.Progressbar(fenetreFichierText, orient="horizontal", length=150, mode="indeterminate")
+
+#-| ParametresText
+fenetreParametresText = Tkinter.LabelFrame(fenetreText, text="Parametres TEXT")
+
+#--| RadioButtons
+versionText = Tkinter.IntVar()
+boutonVersionText1 = Tkinter.Radiobutton(fenetreParametresText, text="V1", variable=versionText, value=1, indicatoron=0)
+
+
+#| IMAGE
+fenetreImage = Tkinter.Frame(fenetreGauche)
+
+#-| FichierImage
+fenetreFichierImage = Tkinter.LabelFrame(fenetreImage, text="IMAGE")
+labelImage = Tkinter.Label(fenetreFichierImage, text="------------------------------------\nbackimage.png\n------------------------------------")
+progressBarImage = ttk.Progressbar(fenetreFichierImage, orient="horizontal", length=150, mode="indeterminate")
+
+#-| ParametresImage
+fenetreParametresImage = Tkinter.LabelFrame(fenetreImage, text="Parametres IMAGE")
+
+#--| RadioButtons
+versionImage = Tkinter.IntVar()
+boutonVersionImage0 = Tkinter.Radiobutton(fenetreParametresImage, text="V0", variable=versionImage, value=0, indicatoron=0)
+boutonVersionImage1 = Tkinter.Radiobutton(fenetreParametresImage, text="V1", variable=versionImage, value=1, indicatoron=0)
+
+#--| Scales
+valueScaleImage = Tkinter.DoubleVar()
+scaleImage = Tkinter.Scale(fenetreParametresImage, orient='horizontal', from_=0, to=100, resolution=0.5, tickinterval=20, length=400, label="BackImage (%)", variable=valueScaleImage)
+
+
+#| SON
+fenetreSon = Tkinter.Frame(fenetreGauche)
+
+#-| FichierSon
+fenetreFichierSon = Tkinter.LabelFrame(fenetreSon, text="SON")
+labelSon = Tkinter.Label(fenetreFichierSon, text="------------------------------------\nson.wav\n------------------------------------")
+progressBarSon = ttk.Progressbar(fenetreFichierSon, orient="horizontal", length=150, mode="indeterminate")
+
+#-| ParametresSon
+fenetreParametresSon = Tkinter.LabelFrame(fenetreSon, text="Parametres SON")
+
+#--| RadioButtons
+versionSon = Tkinter.IntVar()
+boutonVersionSon0 = Tkinter.Radiobutton(fenetreParametresSon, text="V0", variable=versionSon, value=0, indicatoron=0)
+boutonVersionSon1 = Tkinter.Radiobutton(fenetreParametresSon, text="V1", variable=versionSon, value=1, indicatoron=0)
+
+#--| Scales
+valueScaleSon = Tkinter.DoubleVar()
+scaleSon = Tkinter.Scale(fenetreParametresSon, orient='horizontal', from_=0, to=100, resolution=0.5, tickinterval=20, length=400, label="Image d'origine (%)", variable=valueScaleSon)
+
+# - - - -#
+# DROITE #
+#- - - - #
+
+fenetreDroite = Tkinter.Frame(mainTk)
+
+#| CONVERT
+boutonConversion = Tkinter.Button(fenetreDroite, text="C\nO\nN\nV\nE\nR\nT", command=Conversion)
+
+#| SAVE
+nameSave = Tkinter.StringVar() 
+nameSave.set("nomImage")
+entrySave = Tkinter.Entry(fenetreDroite, textvariable=nameSave, width=30)
+boutonSave = Tkinter.Button(fenetreDroite, text="Save", command=ButtonSave)
+boutonSkip = Tkinter.Button(fenetreDroite, text="Skip", command=ButtonSkip)
+
+#-------------------------
+# Mise en Page
+#-------------------------
+
+ParametresScreen()
+
+#-------------------------
+# Lancement de la Loop
+#-------------------------
+
+mainTk.mainloop()
