@@ -39,7 +39,7 @@ Tout est prêt !
 
 ## Fonctionnement
 
-# En Mode Console
+### En Mode Console
 `ghostcolor -c`
 
 * Renommer le texte brut en "textAPeindre" dans le dossier "~/GhostColor/res" (le texte doit être un txt)
@@ -47,7 +47,7 @@ Tout est prêt !
 * Renommer le son en "son" dans le dossier "~GhostColor/res" (le son doit être un wav)
 * Suivre les instruction
 
-# En Mode Graphique
+### En Mode Graphique
 `ghostcolor -g`
 
 * Renommer le texte brut en "textAPeindre" dans le dossier "~/GhostColor/res" (le texte doit être un txt)

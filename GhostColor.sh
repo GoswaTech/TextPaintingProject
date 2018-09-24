@@ -30,6 +30,14 @@ elif [ "$1" == "-h" ]; then
 	echo "#######################"
 	echo "Tapez <ghostcolor -c> pour lancer en mode shell."
 	echo "Tapez <ghostcolor -g> pour lancer en mode graphique."
+	echo "Tapez <sudo ghostcolor --uninstall> pour désinstaller GhostColor."
+	
+elif [ "$1" == "--uninstall" ]; then
+	echo "Suppression de /usr/src/GhostColor"
+	rm -r /usr/src/GhostColor
+	echo "Suppression de /usr/bin/ghostcolor"
+	rm /usr/bin/ghostcolor
+	echo "Désintallation terminée, il ne vous reste plus que le dossier ~/GhostColor"
 	
 else
 	echo "Bienvenue à GHOST COLOR"
