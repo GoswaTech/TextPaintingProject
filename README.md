@@ -18,7 +18,7 @@ Ce logiciel a besoin de ces dépendances pour fonctionner :
 
 ## Installation
 
-# Avec git clone
+### Avec git clone
 
 ```
 git clone https://github.com/GoswaTech/TextPaintingProject.git
@@ -30,7 +30,7 @@ Il ne vous reste qu'à remplacer les lignes 4 et 6 du fichier /usr/bin/ghostcolo
 * ligne 6, `python src/TextPaintingProjectGraphic.py` par `python /usr/src/TextPaintingProjectGraphic.py`
 Et c'est tout !
 
-# Avec la release
+### Avec la release
 
 ```
 cd TextPaintingProject
