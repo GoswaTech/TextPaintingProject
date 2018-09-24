@@ -9,16 +9,13 @@ fi
 
 # Installation du code	
 echo "Installation des sources dans /usr/src/GhostColor"
-cp -R src/ /usr/src/GhostColor
+mkdir /usr/src/GhostColor
+cat src/TextPaintingProjectConsole.py > /usr/src/GhostColor/TextPaintingProjectConsole.py
+cat src/TextPaintingProjectGraphic.py > /usr/src/GhostColor/TextPaintingProjectGraphic.py
 
 echo "Installation de la commande dans /usr/bin/GhostColor"
-cp GhostColor.sh /usr/bin/ghostcolor
+cat GhostColor.sh > /usr/bin/ghostcolor
 chmod 755 /usr/bin/ghostcolor
-
-# Installation des dossiers exports
-echo "Installation des dossiers ~/GhostColor"
-mkdir ~/GhostColor
-mkdir ~/GhostColor/res
 
 # Installation Terminée
 echo "Installation réussie"

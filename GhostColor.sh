@@ -3,21 +3,25 @@
 if [ "$1" == "-c" ]; then
 	if [ -d ~/GhostColor ]; then
 		cd ~/GhostColor
-		python /usr/src/TextPaintingProjectConsole.py
+		python /usr/src/GhostColor/TextPaintingProjectConsole.py
 	else
 		mkdir ~/GhostColor
+		mkdir ~/GhostColor/res
+		echo "Ecrire le texte ici..." > ~/GhostColor/res/textAPeindre.txt
 		cd ~/GhostColor
-		python /usr/src/TextPaintingProjectConsole.py
+		python /usr/src/GhostColor/TextPaintingProjectConsole.py
 	fi
 	
 elif [ "$1" == "-g" ]; then
 	if [ -d ~/GhostColor ]; then
 		cd ~/GhostColor
-		python /usr/src/TextPaintingProjectGraphic.py
+		python /usr/src/GhostColor/TextPaintingProjectGraphic.py
 	else
 		mkdir ~/GhostColor
+		mkdir ~/GhostColor/res
+		echo "Ecrire le texte ici..." > ~/GhostColor/res/textAPeindre.txt
 		cd ~/GhostColor
-		python /usr/src/TextPaintingProjectGraphic.py
+		python /usr/src/GhostColor/TextPaintingProjectGraphic.py
 	fi
 	
 elif [ "$1" == "-h" ]; then
