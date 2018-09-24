@@ -25,15 +25,12 @@ git clone https://github.com/GoswaTech/TextPaintingProject.git
 cd TextPaintingProject
 sudo ./setup.sh
 ```
-Il ne vous reste qu'à remplacer les lignes 4 et 6 du fichier /usr/bin/ghostcolor :
-* ligne 4, `python src/TextPaintingProjectConsole.py` par `python /usr/src/TextPaintingProjectConsole.py`
-* ligne 6, `python src/TextPaintingProjectGraphic.py` par `python /usr/src/TextPaintingProjectGraphic.py`
-Et c'est tout !
 
 ### Avec la release
 
 ```
-cd TextPaintingProject
+#Extraire l'archive
+cd TextPaintingProject-*.*
 sudo ./setup.sh
 ```
 Tout est prêt !
