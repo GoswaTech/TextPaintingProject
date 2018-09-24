@@ -5,12 +5,54 @@ Le but de cette première version est de voir comment serait le rendu final de l
 
 -----
 
+## Dépendances
+
+Ce logiciel a besoin de ces dépendances pour fonctionner :
+* python-imaging
+* python-numpy
+* python-matplotlib
+* python-scipy
+* python-tk
+
+-----
+
+## Installation
+
+### Avec git clone
+
+```
+git clone https://github.com/GoswaTech/TextPaintingProject.git
+cd TextPaintingProject
+sudo ./setup.sh
+```
+
+### Avec la release
+
+```
+#Extraire l'archive
+cd TextPaintingProject-*.*
+sudo ./setup.sh
+```
+Tout est prêt !
+
+-----
+
 ## Fonctionnement
 
-* Insérer votre texte brut dans le fichier ./res/textAPeindre.txt
-* Renommer l'image en "backimage" dans le dossier "./res" (l'image doit être un png)
-* Renommer le son en "son" dans le dossier "./res" (le son doit être un wav)
-* Lancer le script ./TextPaintingProject.py
+### En Mode Console
+`ghostcolor -c`
+
+* Renommer le texte brut en "textAPeindre" dans le dossier "~/GhostColor/res" (le texte doit être un txt)
+* Renommer l'image en "backimage" dans le dossier "~/GhostColor/res" (l'image doit être un png)
+* Renommer le son en "son" dans le dossier "~GhostColor/res" (le son doit être un wav)
+* Suivre les instruction
+
+### En Mode Graphique
+`ghostcolor -g`
+
+* Renommer le texte brut en "textAPeindre" dans le dossier "~/GhostColor/res" (le texte doit être un txt)
+* Renommer l'image en "backimage" dans le dossier "~/GhostColor/res" (l'image doit être un png)
+* Renommer le son en "son" dans le dossier "~GhostColor/res" (le son doit être un wav)
 * Suivre les instruction
 
 ---
