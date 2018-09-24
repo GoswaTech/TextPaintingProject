@@ -12,7 +12,6 @@ from math import sqrt, pow
 import wave
 import scipy.io.wavfile as waveF
 from numpy.fft import fft
-import binascii
 
 #################
 ##### TOOLS #####
