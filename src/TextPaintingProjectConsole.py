@@ -115,10 +115,16 @@ def FocusColors(tableau, showImage, verbose):
 	
 	return tableau
 
-def CreerImage(text, version, showImage, verbose):
+def CreerImage(text, pathToBackImage, pathToWave, showImage, verbose):
+	print('[INFO] Traitement Texte')
+	version =  input("Mode de traitement : ")
 	if((version == 1) or (version == 0)):
 		print('[INFO] Methode 1 choisie')
 		return CreationImage1(text, showImage, verbose)
+	# Mixed Versions
+	if(version == 2):
+		print('[INFO] Methode 2 choisie')
+		return CreationImage2(CreationImage1(text, showImage, verbose), pathToWave, showImage, verbose)
 
 def CreationImage1(text, showImage, verbose):
 	print('[INFO] Image3 en Creation')
@@ -157,6 +163,32 @@ def CreationImage1(text, showImage, verbose):
 		plt.show()
 	
 	return newAr
+
+def CreationImage2(tableau, pathToWave, showImage, verbose):
+	# Analyse de Fourier en relief
+	print('[INFO] Analyse de Fourier')
+	rate, data = waveF.read(pathToWave)
+	debut = 0
+	duree = data.size/rate
+	spectre = AnalyseFourier(data,rate,debut,duree)
+	max = spectre.max()
+	lenSpectre = len(spectre)
+	lenTab = len(tableau)
+	force = float(float(input("Force de la transformation (en %) : "))/100)
+	newTableau = tableau
+	for indexLine in range(lenTab):
+		valueLine = MoyFourier1(spectre, indexLine, lenTab, lenSpectre, max)
+		for i in range(lenTab):
+			try:
+				newTableau[i][indexLine][0] = int(tableau[i+int(valueLine*force)][indexLine][0])
+				newTableau[i][indexLine][1] = int(tableau[i+int(valueLine*force)][indexLine][1])
+				newTableau[i][indexLine][2] = int(tableau[i+int(valueLine*force)][indexLine][2])
+			except:
+				newTableau[i][indexLine][0] = int(tableau[i][indexLine][0])
+				newTableau[i][indexLine][1] = int(tableau[i][indexLine][1])
+				newTableau[i][indexLine][2] = int(tableau[i][indexLine][2])
+	
+	return newTableau
 
 #################
 ##### IMAGE #####
@@ -283,7 +315,7 @@ def Methode3(tableau, pathToBackImage, showImage, verbose):
 	img = Image.open(pathToBackImage)
 	imgAr = np.array(smisc.imresize(img.copy(), (len(tableau[0]),len(tableau))))
 	print('[INFO] BackImage en cache et redimonsionne')
-	if(input("Pourcentage Couleur pas Couleur ? yes(1) | no(0) ")):
+	if(input("Pourcentage Couleur par Couleur ? yes(1) | no(0) ")):
 		red = float(input('Pourcentage de rouge BackImage : '))/100
 		green = float(input('Pourcentage de vert BackImage : '))/100
 		blue = float(input('Pourcentage de bleu BackImage : '))/100
@@ -379,6 +411,8 @@ def TraitementSon(tableau, pathToWave, showImage, verbose):
 		return tableau
 	if(version == 1):
 		MethodeSon1(tableau, pathToWave, showImage, verbose)
+	if(version == 2):
+		MethodeSon2(tableau, pathToWave, showImage, verbose)
 	
 	return tableau
 
@@ -401,6 +435,30 @@ def MethodeSon1(tableau, pathToWave, showImage, verbose):
 			tableau[i][indexLine][2] = int(tableau[i][indexLine][2]*pourcentage + (1.0-pourcentage)*valueLine)
 	
 	return tableau
+
+def MethodeSon2(tableau, pathToWave, showImage, verbose):
+	# Analyse de Fourier en relief
+	print('[INFO] Analyse de Fourier')
+	rate, data = waveF.read(pathToWave)
+	debut = 0
+	duree = data.size/rate
+	spectre = AnalyseFourier(data,rate,debut,duree)
+	max = spectre.max()
+	lenSpectre = len(spectre)
+	lenTab = len(tableau)
+	transparence = float(float(input("Transparence de la transformation : "))/100)
+	newTableau = tableau
+	for indexLine in range(lenTab):
+		valueLine = MoyFourier1(spectre, indexLine, lenTab, lenSpectre, max)
+		for i in range(lenTab):
+			try:
+				newTableau[i][indexLine][0] = int(tableau[i+int(valueLine)][indexLine][0]*(1-transparence)) + int(tableau[i][indexLine][0]*(transparence))
+				newTableau[i][indexLine][1] = int(tableau[i+int(valueLine)][indexLine][1]*(1-transparence)) + int(tableau[i][indexLine][1]*(transparence))
+				newTableau[i][indexLine][2] = int(tableau[i+int(valueLine)][indexLine][2]*(1-transparence)) + int(tableau[i][indexLine][2]*(transparence))
+			except:
+				continue
+	
+	return newTableau
 
 ###########################
 ##### CLOSE PROGRAMME #####
@@ -466,7 +524,7 @@ def main():
 	##### Image
 	
 	# Creation
-	tableau = CreerImage(text, 1, showImage, verbose)
+	tableau = CreerImage(text, pathToBackImage, pathToWave, showImage, verbose)
 	
 	# Traitement
 	tableau = FocusColors(tableau, showImage, False)
