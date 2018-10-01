@@ -118,10 +118,15 @@ def FocusColors(tableau, showImage, verbose):
 	
 	return tableau
 
-def CreerImage(text, version, showImage, verbose):
+def CreerImage(text, pathToBackImage, pathToWave, showImage, verbose):
+	version =  versionText.get()
 	if((version == 1) or (version == 0)):
 		print('[INFO] Methode 1 choisie')
 		return CreationImage1(text, showImage, verbose)
+	# Mixed Versions
+	if(version == 2):
+		print('[INFO] Methode 2 choisie')
+		return CreationImage2(CreationImage1(text, showImage, verbose), pathToWave, showImage, verbose)
 
 def CreationImage1(text, showImage, verbose):
 	print('[INFO] Image3 en Creation')
@@ -160,6 +165,32 @@ def CreationImage1(text, showImage, verbose):
 		plt.show()
 	
 	return newAr
+
+def CreationImage2(tableau, pathToWave, showImage, verbose):
+	# Analyse de Fourier en relief
+	print('[INFO] Analyse de Fourier')
+	rate, data = waveF.read(pathToWave)
+	debut = 0
+	duree = data.size/rate
+	spectre = AnalyseFourier(data,rate,debut,duree)
+	max = spectre.max()
+	lenSpectre = len(spectre)
+	lenTab = len(tableau)
+	force = float(float(valueScaleText.get())/100)
+	newTableau = tableau
+	for indexLine in range(lenTab):
+		valueLine = MoyFourier1(spectre, indexLine, lenTab, lenSpectre, max)
+		for i in range(lenTab):
+			try:
+				newTableau[i][indexLine][0] = int(tableau[i+int(valueLine*force)][indexLine][0])
+				newTableau[i][indexLine][1] = int(tableau[i+int(valueLine*force)][indexLine][1])
+				newTableau[i][indexLine][2] = int(tableau[i+int(valueLine*force)][indexLine][2])
+			except:
+				newTableau[i][indexLine][0] = int(tableau[i][indexLine][0])
+				newTableau[i][indexLine][1] = int(tableau[i][indexLine][1])
+				newTableau[i][indexLine][2] = int(tableau[i][indexLine][2])
+	
+	return newTableau
 
 #################
 ##### IMAGE #####
@@ -282,6 +313,8 @@ def TraitementSon(tableau, pathToWave, showImage, verbose):
 		return tableau
 	if(version == 1):
 		MethodeSon1(tableau, pathToWave, showImage, verbose)
+	if(version == 2):
+		MethodeSon2(tableau, pathToWave, showImage, verbose)
 	
 	return tableau
 
@@ -305,6 +338,30 @@ def MethodeSon1(tableau, pathToWave, showImage, verbose):
 			tableau[i][indexLine][2] = int(tableau[i][indexLine][2]*pourcentage + (1.0-pourcentage)*valueLine)
 	
 	return tableau
+
+def MethodeSon2(tableau, pathToWave, showImage, verbose):
+	# Analyse de Fourier en relief
+	print('[INFO] Analyse de Fourier')
+	rate, data = waveF.read(pathToWave)
+	debut = 0
+	duree = data.size/rate
+	spectre = AnalyseFourier(data,rate,debut,duree)
+	max = spectre.max()
+	lenSpectre = len(spectre)
+	lenTab = len(tableau)
+	transparence = float(float(valueScaleSon.get())/100)
+	newTableau = tableau
+	for indexLine in range(lenTab):
+		valueLine = MoyFourier1(spectre, indexLine, lenTab, lenSpectre, max)
+		for i in range(lenTab):
+			try:
+				newTableau[i][indexLine][0] = int(tableau[i+int(valueLine)][indexLine][0]*(1-transparence)) + int(tableau[i][indexLine][0]*(transparence))
+				newTableau[i][indexLine][1] = int(tableau[i+int(valueLine)][indexLine][1]*(1-transparence)) + int(tableau[i][indexLine][1]*(transparence))
+				newTableau[i][indexLine][2] = int(tableau[i+int(valueLine)][indexLine][2]*(1-transparence)) + int(tableau[i][indexLine][2]*(transparence))
+			except:
+				continue
+	
+	return newTableau
 
 #####################
 ##### GRAPHIQUE #####
@@ -374,7 +431,7 @@ def Conversion():
 	# TEXT
 	progressBarText.pack(side=Tkinter.TOP)
 	progressBarText.start()
-	tableau = CreerImage(text, versionText.get(), showImage, verbose)
+	tableau = CreerImage(text, pathToBackImage, pathToWave, showImage, verbose)
 	tableau = FocusColors(tableau, showImage, False)
 	progressBarText.pack_forget()
 	
@@ -422,7 +479,10 @@ def ParametresScreen():
 	
 	#-| ParametresText
 	fenetreParametresText.pack(side=Tkinter.LEFT, fill=Tkinter.X, expand=0)
+	boutonVersionText0.pack(side=Tkinter.LEFT, fill=Tkinter.X, expand=0)
 	boutonVersionText1.pack(side=Tkinter.LEFT, fill=Tkinter.X, expand=0)
+	boutonVersionText2.pack(side=Tkinter.LEFT, fill=Tkinter.X, expand=0)
+	scaleText.pack(side=Tkinter.LEFT)
 	
 	
 	#| IMAGE
@@ -450,6 +510,7 @@ def ParametresScreen():
 	fenetreParametresSon.pack(side=Tkinter.LEFT, fill=Tkinter.X, expand=0)
 	boutonVersionSon0.pack(side=Tkinter.LEFT, fill=Tkinter.X, expand=0)
 	boutonVersionSon1.pack(side=Tkinter.LEFT, fill=Tkinter.X, expand=0)
+	boutonVersionSon2.pack(side=Tkinter.LEFT, fill=Tkinter.X, expand=0)
 	scaleSon.pack(side=Tkinter.LEFT)
 	
 	
@@ -461,14 +522,6 @@ def ParametresScreen():
 	
 	#| CONVERT
 	boutonConversion.pack()
-	
-	# - - - -#
-	# SELECT #
-	#- - - - #
-	
-	boutonVersionText1.select()
-	boutonVersionSon1.select()
-	boutonVersionImage1.select()
 
 ###########################
 ##### CLOSE PROGRAMME #####
@@ -538,8 +591,13 @@ fenetreParametresText = Tkinter.LabelFrame(fenetreText, text="Parametres TEXT")
 
 #--| RadioButtons
 versionText = Tkinter.IntVar()
+boutonVersionText0 = Tkinter.Radiobutton(fenetreParametresText, text="V0", variable=versionText, value=0, indicatoron=0)
 boutonVersionText1 = Tkinter.Radiobutton(fenetreParametresText, text="V1", variable=versionText, value=1, indicatoron=0)
+boutonVersionText2 = Tkinter.Radiobutton(fenetreParametresText, text="V2", variable=versionText, value=2, indicatoron=0)
 
+#--| Scales
+valueScaleText = Tkinter.DoubleVar()
+scaleText = Tkinter.Scale(fenetreParametresText, orient='horizontal', from_=0, to=100, resolution=0.5, tickinterval=20, length=400, label="Force de la transformation (en %) : ", variable=valueScaleText)
 
 #| IMAGE
 fenetreImage = Tkinter.Frame(fenetreGauche)
@@ -577,6 +635,7 @@ fenetreParametresSon = Tkinter.LabelFrame(fenetreSon, text="Parametres SON")
 versionSon = Tkinter.IntVar()
 boutonVersionSon0 = Tkinter.Radiobutton(fenetreParametresSon, text="V0", variable=versionSon, value=0, indicatoron=0)
 boutonVersionSon1 = Tkinter.Radiobutton(fenetreParametresSon, text="V1", variable=versionSon, value=1, indicatoron=0)
+boutonVersionSon2 = Tkinter.Radiobutton(fenetreParametresSon, text="V2", variable=versionSon, value=2, indicatoron=0)
 
 #--| Scales
 valueScaleSon = Tkinter.DoubleVar()
@@ -597,6 +656,14 @@ nameSave.set("nomImage")
 entrySave = Tkinter.Entry(fenetreDroite, textvariable=nameSave, width=30)
 boutonSave = Tkinter.Button(fenetreDroite, text="Save", command=ButtonSave)
 boutonSkip = Tkinter.Button(fenetreDroite, text="Skip", command=ButtonSkip)
+
+# - - - -#
+# SELECT #
+#- - - - #
+
+boutonVersionText2.select()
+boutonVersionSon1.select()
+boutonVersionImage1.select()
 
 #-------------------------
 # Mise en Page
